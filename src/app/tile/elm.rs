@@ -87,10 +87,6 @@ pub fn new(hotkey: HotKey, config: &Config) -> (Tile, Task<Message>) {
 
 pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
     if tile.visible {
-        let round_bottom_edges = match &tile.page {
-            Page::Main | Page::EmojiSearch => tile.results.is_empty(),
-            Page::ClipboardHistory => tile.clipboard_content.is_empty(),
-        };
         let title_input = text_input(tile.config.placeholder.as_str(), &tile.query)
             .on_input(move |a| Message::SearchQueryChanged(a, wid))
             .on_paste(move |a| Message::SearchQueryChanged(a, wid))
@@ -99,7 +95,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             .id("query")
             .width(Fill)
             .line_height(LineHeight::Relative(1.75))
-            .style(move |_, _| rustcast_text_input_style(&tile.config.theme, round_bottom_edges))
+            .style(move |_, _| rustcast_text_input_style(&tile.config.theme))
             .padding(20);
 
         let scrollbar_direction = if tile.config.theme.show_scroll_bar {
@@ -120,8 +116,6 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
                 tile.config.theme.clone(),
                 tile.focus_id,
             )
-        } else if tile.results.is_empty() {
-            space().into()
         } else if tile.page == Page::EmojiSearch {
             emoji_page(
                 tile.config.theme.clone(),
@@ -157,14 +151,26 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             .id("results")
             .height(height as u32);
 
+        let text = if !tile.query_lc.is_empty() {
+            if results_count == 1 {
+                "1 result found".to_string()
+            } else if results_count == 0 {
+                "No results found".to_string()
+            } else {
+                format!("{results_count} results found")
+            }
+        } else {
+            String::from("♥️ Rustcast")
+        };
+
         let contents = container(
             Column::new()
                 .push(title_input)
                 .push(scrollable)
                 .push(footer(
                     tile.config.theme.clone(),
-                    results_count,
                     tile.current_mode.clone(),
+                    text,
                 ))
                 .spacing(0),
         )
@@ -179,7 +185,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             ..Default::default()
         });
 
-        container(contents.clip(false))
+        container(contents)
             .style(|_| contents_style(&tile.config.theme))
             .into()
     } else {
@@ -187,19 +193,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
     }
 }
 
-fn footer(theme: Theme, results_count: usize, current_mode: String) -> Element<'static, Message> {
-    if results_count == 0 {
-        return space().into();
-    }
-
-    let text = if results_count == 1 {
-        "1 result found".to_string()
-    } else {
-        format!("{results_count} results found")
-    };
-
-    // “Liquid glass” parameters (match your other styles)
-    let focused = false;
+fn footer(theme: Theme, current_mode: String, text: String) -> Element<'static, Message> {
     let radius = 15.0;
 
     let current_mode = format!(
@@ -215,6 +209,7 @@ fn footer(theme: Theme, results_count: usize, current_mode: String) -> Element<'
                     .height(30)
                     .color(theme.text_color(0.7))
                     .font(theme.font())
+                    .align_y(Alignment::Center)
                     .align_x(Alignment::Center),
             )
             .push(
@@ -224,24 +219,28 @@ fn footer(theme: Theme, results_count: usize, current_mode: String) -> Element<'
                     .color(theme.text_color(0.7))
                     .font(theme.font())
                     .width(Fill)
+                    .align_y(Alignment::Center)
                     .align_x(Alignment::End),
             )
+            .align_y(Alignment::Center)
             .padding(4)
             .width(Fill)
-            .height(30),
+            .height(Fill),
     )
+    .align_y(Alignment::Center)
     .center(Length::Fill)
     .width(WINDOW_WIDTH)
     .padding(5)
+    .height(30)
     .style(move |_| container::Style {
         text_color: None,
         background: Some(iced::Background::Color(glass_surface(
             theme.bg_color(),
-            focused,
+            false,
         ))),
         border: iced::Border {
-            color: glass_border(theme.text_color(1.0), focused),
-            width: 1.0,
+            color: glass_border(theme.text_color(1.0), false),
+            width: 0.,
             radius: Radius::new(radius).top(0.0),
         },
 
