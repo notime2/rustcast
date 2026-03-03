@@ -96,8 +96,8 @@ pub fn emoji_button_style(tile_theme: &ConfigTheme) -> button::Style {
 }
 
 pub fn glass_surface(base: Color, focused: bool) -> Color {
-    let t = if focused { 0.5 } else { 0.06 };
-    let a = if focused { 0.5 } else { 0.22 };
+    let t = if focused { 0.3 } else { 0.06 };
+    let a = if focused { 0.3 } else { 0.22 };
     with_alpha(tint(base, t), a)
 }
 
