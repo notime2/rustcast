@@ -237,6 +237,12 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             new_options.extend(App::basic_apps());
             new_options.par_sort_by_key(|x| x.display_name.len());
 
+            tile.tray_icon = if new_config.show_trayicon {
+                Some(menu_icon(new_config.clone(), tile.sender.clone().unwrap()))
+            } else {
+                None
+            };
+
             tile.theme = new_config.theme.to_owned().into();
             tile.config = new_config;
             tile.options = AppIndex::from_apps(new_options);

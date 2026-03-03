@@ -29,7 +29,9 @@ pub fn menu_icon(config: Config, sender: ExtSender) -> TrayIcon {
     let builder = TrayIconBuilder::new();
 
     let mut modes = config.modes;
-    modes.insert("Default".to_string(), "default".to_string());
+    if !modes.contains_key("default") {
+        modes.insert("Default".to_string(), "default".to_string());
+    }
 
     let image = get_image();
     let icon = Icon::from_rgba(image.as_bytes().to_vec(), image.width(), image.height()).unwrap();

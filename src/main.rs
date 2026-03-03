@@ -37,6 +37,7 @@ fn main() -> iced::Result {
         )
         .unwrap();
     }
+
     let config: Config = match std::fs::read_to_string(&file_path) {
         Ok(a) => toml::from_str(&a).unwrap_or(Config::default()),
         Err(_) => Config::default(),

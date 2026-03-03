@@ -37,7 +37,7 @@ impl Function {
             Function::RunShellCommand(command) => {
                 Command::new("sh")
                     .arg("-c")
-                    .arg(format!("{}", command))
+                    .arg(command)
                     .spawn()
                     .ok();
             }

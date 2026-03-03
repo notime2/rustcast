@@ -1,7 +1,7 @@
 //! Main logic for the app
 use std::collections::HashMap;
 
-use crate::app::apps::{App, ICNS_ICON};
+use crate::app::apps::{App, AppCommand, ICNS_ICON};
 use crate::commands::Function;
 use crate::utils::icns_data_to_handle;
 use crate::{app::tile::ExtSender, clipboard::ClipBoardContentType};
@@ -100,7 +100,8 @@ impl ToApps for HashMap<String, String> {
     fn to_apps(&self) -> Vec<App> {
         let icons = icns_data_to_handle(ICNS_ICON.to_vec());
 
-        self.keys()
+        let mut to_apps: Vec<App> = self
+            .keys()
             .map(|key| {
                 let display_name = format!(
                     "{}{} Mode",
@@ -118,6 +119,19 @@ impl ToApps for HashMap<String, String> {
                     display_name,
                 }
             })
-            .collect()
+            .collect();
+
+        if self.get("default").is_none() {
+            to_apps.push(App {
+                ranking: 0,
+                open_command: AppCommand::Message(Message::SwitchMode("Default".to_string())),
+                desc: "Change mode".to_string(),
+                icons: icons.clone(),
+                display_name: "Default mode".to_string(),
+                search_name: "default".to_string(),
+            });
+        };
+
+        to_apps
     }
 }
