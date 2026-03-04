@@ -3,7 +3,7 @@ set -euo pipefail
 
 RELEASE_DIR="target/release"
 APP_DIR="$RELEASE_DIR/macos"
-APP_NAME="Halloy.app"
+APP_NAME="Rustcast.app"
 APP_PATH="$APP_DIR/$APP_NAME"
 
 # --- Required env vars (using the names you provided) ---
@@ -14,7 +14,6 @@ environment=(
   "MACOS_CERTIFICATE_NAME"
   "MACOS_NOTARIZATION_PWD"
   "MACOS_NOTARY_TEAM_ID"
-  "MACOS_NOTARY_ISSUER_ID"
   "MACOS_NOTARY_KEY_ID"
   "MACOS_NOTARY_KEY"
 )
