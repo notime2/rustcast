@@ -1,3 +1,4 @@
+//! This contains the functions to use for rendering the emoji page
 use iced::{Border, Length::Fill, border::Radius, widget::tooltip};
 
 use crate::{
@@ -7,6 +8,12 @@ use crate::{
     styles::{glass_border, glass_surface, with_alpha},
 };
 
+/// The emoji pages element to render
+///
+/// Takes:
+/// - the [`Theme`]
+/// - the emojis to render
+/// - the focussed id
 pub fn emoji_page(
     tile_theme: Theme,
     emojis: Vec<App>,

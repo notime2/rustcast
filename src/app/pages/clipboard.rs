@@ -1,3 +1,4 @@
+//! The elements for the clipboard history page
 use iced::widget::{
     Scrollable, scrollable,
     scrollable::{Direction, Scrollbar},
@@ -8,11 +9,19 @@ use crate::{
     clipboard::ClipBoardContentType,
 };
 
+/// The clipboard view
+///
+/// Takes:
+/// - the clipboard content to render,
+/// - the id of which element is focussed,
+/// - and the [`Theme`]
+///
+/// Returns:
+/// - the iced Element to render
 pub fn clipboard_view(
     clipboard_content: Vec<ClipBoardContentType>,
     focussed_id: u32,
     theme: Theme,
-    focus_id: u32,
 ) -> Element<'static, Message> {
     let theme_clone = theme.clone();
     let theme_clone_2 = theme.clone();
@@ -20,7 +29,9 @@ pub fn clipboard_view(
         container(
             scrollable(
                 Column::from_iter(clipboard_content.iter().enumerate().map(|(i, content)| {
-                    content.to_app().render(theme.clone(), i as u32, focus_id)
+                    content
+                        .to_app()
+                        .render(theme.clone(), i as u32, focussed_id)
                 }))
                 .width(WINDOW_WIDTH / 3.),
             )

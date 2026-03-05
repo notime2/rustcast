@@ -1,6 +1,6 @@
 //! Macos specific logic, such as window settings, etc.
-mod discovery;
-mod haptics;
+pub mod discovery;
+pub mod haptics;
 
 use iced::wgpu::rwh::WindowHandle;
 

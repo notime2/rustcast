@@ -1,18 +1,18 @@
-/// A small expression parser/evaluator supporting:
-/// - + - * / ^ with precedence
-/// - parentheses
-/// - unary +/-
-/// - ln(x)
-/// - log(x) (base 10)
-/// - log(base, x)
-///
-/// Examples:
-///   "2 + 3*4"        => 14
-///   "2^(1+2)"        => 8
-///   "-(3 + 4)"       => -7
-///   "ln(2.7182818)"  => ~1
-///   "log(100)"       => 2
-///   "log(2, 8)"      => 3
+//! A small expression parser/evaluator supporting:
+//! - + - * / ^ with precedence
+//! - parentheses
+//! - unary +/-
+//! - ln(x)
+//! - log(x) (base 10)
+//! - log(base, x)
+//!
+//! Examples:
+//!   "2 + 3*4"        => 14
+//!   "2^(1+2)"        => 8
+//!   "-(3 + 4)"       => -7
+//!   "ln(2.7182818)"  => ~1
+//!   "log(100)"       => 2
+//!   "log(2, 8)"      => 3
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {

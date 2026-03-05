@@ -312,7 +312,7 @@ fn is_helper_location(path: &Path) -> bool {
         || s.contains("/Library/PrivilegedHelperTools/")
 }
 
-/// https://github.com/cardisoft/cardinal/blob/339b27c3c6abaf94405a9ab09ec39296baba4f91/fs-icon/src/lib.rs#L37
+/// <https://github.com/cardisoft/cardinal/blob/339b27c3c6abaf94405a9ab09ec39296baba4f91/fs-icon/src/lib.rs#L37>
 pub fn icon_of_path_ns(path: &str) -> Option<Vec<u8>> {
     objc2::rc::autoreleasepool(|_| -> Option<Vec<u8>> {
         let path_ns = NSString::from_str(path);

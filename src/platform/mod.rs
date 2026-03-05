@@ -1,3 +1,4 @@
+//! This handles all of the platform specific stuff.
 use iced::wgpu::rwh::WindowHandle;
 
 pub use self::cross::default_app_paths;

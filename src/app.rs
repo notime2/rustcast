@@ -88,14 +88,22 @@ pub fn default_settings() -> Settings {
     }
 }
 
+/// A Trait to define that a struct can be converted to an app
 pub trait ToApp {
+    /// Convert self into an app
     fn to_app(&self) -> App;
 }
 
+/// A Trait to define that a type (containing multiple elements) can be converted to multiple Apps
+///
+/// i.e. [`Vec<Box<dyn ToApp>>`] can implement ToApps but it doesn't make sense to do that
 pub trait ToApps {
+    /// convert self into a Vec of apps
     fn to_apps(&self) -> Vec<App>;
 }
 
+/// [`HashMap<String, String>`] is for storing the modes, and is an assumtion that the String
+/// values are shell commands
 impl ToApps for HashMap<String, String> {
     fn to_apps(&self) -> Vec<App> {
         let icons = icns_data_to_handle(ICNS_ICON.to_vec());

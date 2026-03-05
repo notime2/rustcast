@@ -85,6 +85,7 @@ pub fn new(hotkey: HotKey, config: &Config) -> (Tile, Task<Message>) {
     )
 }
 
+/// The elm View function that renders the entire rustcast window
 pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
     if tile.visible {
         let title_input = text_input(tile.config.placeholder.as_str(), &tile.query)
@@ -114,7 +115,6 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
                 tile.clipboard_content.clone(),
                 tile.focus_id,
                 tile.config.theme.clone(),
-                tile.focus_id,
             )
         } else if tile.page == Page::EmojiSearch {
             emoji_page(
@@ -193,6 +193,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
     }
 }
 
+/// The footer at the bottom displaying the mode and results found, and its styling
 fn footer(theme: Theme, current_mode: String, text: String) -> Element<'static, Message> {
     let radius = 15.0;
 

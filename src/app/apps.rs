@@ -22,6 +22,7 @@ use crate::{
     utils::icns_data_to_handle,
 };
 
+/// The rustcast icns icons bytes
 pub const ICNS_ICON: &[u8] = include_bytes!("../../docs/icon.icns");
 
 /// This tells each "App" what to do when it is clicked, whether it is a function, a message, or a display

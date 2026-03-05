@@ -35,7 +35,9 @@ pub(crate) fn get_installed_apps(store_icons: bool) -> Vec<App> {
 
 /// This gets all the installed apps in the given directory
 ///
-/// the directories are defined in [`crate::app::tile::Tile::new`]
+/// Is a fallback from the method in [`crate::platform::macos::discovery::get_installed_apps`]
+///
+/// the directories are defined in [`crate::app::tile::elm::new`]
 fn discover_apps(
     dir: impl AsRef<Path>,
     store_icons: bool,

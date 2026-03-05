@@ -1,3 +1,4 @@
+//! Exports to use for making pages
 pub use iced::{
     Alignment, Background, Element, Length,
     widget::{Button, Column, Row, Text, container},

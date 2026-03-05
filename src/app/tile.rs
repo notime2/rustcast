@@ -119,6 +119,9 @@ pub struct Tile {
     pub height: f32,
 }
 
+/// A struct to store all the hotkeys
+///
+/// Stores the toggle [`HotKey`] and the Clipboard [`HotKey`]
 #[derive(Clone, Debug)]
 pub struct Hotkeys {
     pub toggle: HotKey,

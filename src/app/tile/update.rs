@@ -33,6 +33,7 @@ use crate::{app::DEFAULT_WINDOW_HEIGHT, platform::perform_haptic};
 use crate::{app::Move, platform::HapticPattern};
 use crate::{app::RUSTCAST_DESC_NAME, platform::get_installed_apps};
 
+/// Handle the "elm" update
 pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
     match message {
         Message::OpenWindow => {
@@ -561,6 +562,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
     }
 }
 
+/// helper function for the tasks needed to open a window
 fn open_window(height: f32) -> Task<Message> {
     Task::batch([
         window::open(default_settings())
@@ -571,10 +573,12 @@ fn open_window(height: f32) -> Task<Message> {
     ])
 }
 
+/// A helper function for resizing rustcast when only one result is found
 fn single_item_resize_task(id: Id) -> Task<Message> {
     Task::done(Message::ResizeWindow(id, 55. + DEFAULT_WINDOW_HEIGHT))
 }
 
+/// Handling the lemon easter egg icon
 fn lemon_icon_handle() -> Option<Handle> {
     image::ImageReader::new(Cursor::new(include_bytes!("../../../docs/lemon.png")))
         .with_guessed_format()
