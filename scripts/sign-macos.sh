@@ -57,12 +57,12 @@ else
   printf '%s' "$MACOS_NOTARY_KEY" | base64 --decode > "$NOTARY_KEY_FILE"
 fi
 
-xcrun notarytool submit "notarization.zip" \
-  --team-id "$MACOS_NOTARY_TEAM_ID" \
-  --issuer "$MACOS_NOTARY_ISSUER_ID" \
-  --key-id "$MACOS_NOTARY_KEY_ID" \
-  --key "$NOTARY_KEY_FILE" \
-  --wait
+# xcrun notarytool submit "notarization.zip" \
+#   --team-id "$MACOS_NOTARY_TEAM_ID" \
+#   --issuer "$MACOS_NOTARY_ISSUER_ID" \
+#   --key-id "$MACOS_NOTARY_KEY_ID" \
+#   --key "$NOTARY_KEY_FILE" \
+#   --wait
 
 echo "Attach staple"
 xcrun stapler staple "$APP_PATH"
