@@ -241,13 +241,16 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 Err(_) => return Task::none(),
             };
 
-            let sender = tile.sender.clone().unwrap();
-            let new_config_clone = new_config.clone();
-
-            tile.tray_icon.as_mut().map(move |x| {
-                x.set_visible(new_config_clone.show_trayicon).unwrap_or(());
-                x.set_menu(Some(Box::new(menu_builder(new_config_clone, sender))));
-            });
+            if let Some(icon) = tile.tray_icon.as_mut() {
+                icon.set_visible(new_config.clone().show_trayicon)
+                    .unwrap_or(());
+                icon.set_menu(Some(Box::new(menu_builder(
+                    new_config.clone(),
+                    tile.sender.clone().unwrap(),
+                ))));
+            } else {
+                tile.tray_icon = Some(menu_icon(new_config.clone(), tile.sender.clone().unwrap()));
+            }
 
             let mut new_options = get_installed_apps(new_config.theme.show_icons);
             new_options.extend(new_config.shells.iter().map(|x| x.to_app()));

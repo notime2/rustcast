@@ -69,7 +69,7 @@ pub fn menu_builder(config: Config, sender: ExtSender) -> Menu {
 }
 
 fn get_image() -> DynamicImage {
-    ImageReader::new(Cursor::new(include_bytes!("../../docs/icon.png")))
+    ImageReader::new(Cursor::new(menubar_icon().unwrap_or_default()))
         .with_guessed_format()
         .unwrap()
         .decode()
@@ -134,7 +134,7 @@ fn init_event_handler(sender: ExtSender, hotkey_id: u32) {
 }
 
 fn version_item() -> MenuItem {
-    let version = "Version: ".to_string() + option_env!("APP_VERSION").unwrap_or("Unknown");
+    let version = "RustCast: ".to_string() + option_env!("APP_VERSION").unwrap_or("Unknown");
     MenuItem::new(version, false, None)
 }
 
@@ -219,9 +219,73 @@ fn about_item(image: DynamicImage) -> PredefinedMenuItem {
         .authors(Some(vec!["Unsecretised".to_string()]))
         .credits(Some("Unsecretised".to_string()))
         .icon(Ico::from_rgba(image.as_bytes().to_vec(), image.width(), image.height()).ok())
-        .website(Some("https://rustcast.umangsurana.com"))
+        .website(Some("https://rustcast.app"))
         .license(Some("MIT"))
         .build();
 
     PredefinedMenuItem::about(Some("About.."), Some(about_metadata_builder))
+}
+
+#[cfg(target_os = "macos")]
+fn menubar_icon() -> Option<Vec<u8>> {
+    objc2::rc::autoreleasepool(|_| -> Option<Vec<u8>> {
+        use objc2::rc::Retained;
+        use objc2_app_kit::NSBitmapImageRep;
+        use objc2_app_kit::{NSBezierPath, NSBitmapImageFileType, NSColor, NSImage};
+        use objc2_foundation::NSSize;
+        use objc2_foundation::{NSData, NSDictionary, NSPoint};
+
+        let size = 128.;
+        let thickness = 4.;
+
+        let center = NSPoint::new(size * 0.5, size * 0.5);
+
+        let s = NSSize::new(size, size);
+        let segments = [
+            (-70., 145., size * 0.33, (size * 0.33 - thickness).max(0.0)),
+            (0., 360., size * 0.2, (size * 0.2 - thickness).max(0.0)),
+        ];
+        let image: Retained<NSImage> = NSImage::imageWithSize_flipped_drawingHandler(
+            s,
+            false,
+            &block2::RcBlock::new(move |doc_rect| {
+                let doc =
+                    NSBezierPath::bezierPathWithRoundedRect_xRadius_yRadius(doc_rect, 10., 10.);
+                NSColor::colorWithCalibratedRed_green_blue_alpha(0.1, 0.1, 0.1, 0.).setFill();
+                doc.fill();
+                let path = NSBezierPath::bezierPath();
+
+                for (start, end, outer_r, inner_r) in segments {
+                    path.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise(
+                        center, outer_r, start, end, false,
+                    );
+
+                    path.appendBezierPathWithArcWithCenter_radius_startAngle_endAngle_clockwise(
+                        center, inner_r, end, start, true,
+                    );
+                }
+
+                NSColor::colorWithCalibratedRed_green_blue_alpha(1., 1., 1., 0.8).setFill();
+                path.fill();
+
+                path.closePath();
+                true.into()
+            }),
+        );
+
+        let tiff = image.TIFFRepresentation()?;
+        let rep = NSBitmapImageRep::imageRepWithData(&tiff)?;
+        let png: Retained<NSData> = unsafe {
+            rep.representationUsingType_properties(
+                NSBitmapImageFileType::PNG,
+                &NSDictionary::new(),
+            )?
+        };
+        Some(png.to_vec())
+    })
+}
+
+#[cfg(not(target_os = "macos"))]
+fn menubar_icon() -> Option<Vec<u8>> {
+    Some(include_bytes!("../../docs/icon.png").to_vec())
 }
