@@ -422,18 +422,6 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             tile.query_lc = input.trim().to_lowercase();
             tile.query = input;
 
-            let query_clone = tile.query.clone();
-            let query_clone_2 = tile.query.clone();
-            let query_clone_3 = tile.query.clone();
-            let query_clone_4 = tile.query_lc.clone();
-
-            let is_valid_url = thread::spawn(move || is_valid_url(&query_clone));
-            let conversions = thread::spawn(move || unit_conversion::convert_query(&query_clone_2));
-            let expr = thread::spawn(move || Expr::from_str(&query_clone_3));
-            let web_search = thread::spawn(move || {
-                query_clone_4.ends_with("?") || query_clone_4.split_whitespace().nth(2).is_some()
-            });
-
             let prev_size = tile.results.len();
 
             if tile.page == Page::ClipboardHistory && tile.query_lc != "main" {
@@ -499,22 +487,23 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                         return Task::batch([zero_item_resize_task(id), task]);
                     }
                 }
-                _ => {}
-            }
-
-            if tile.query_lc.starts_with(">") && tile.page == Page::Main {
-                let command = tile.query.strip_prefix(">").unwrap_or("");
-                tile.results = vec![App {
-                    ranking: 20,
-                    open_command: AppCommand::Function(Function::RunShellCommand(
-                        command.to_string(),
-                    )),
-                    display_name: format!("Shell Command: {}", command),
-                    icons: None,
-                    search_name: "".to_string(),
-                    desc: "Shell Command".to_string(),
-                }];
-                return single_item_resize_task(id);
+                query => 'a: {
+                    if !query.starts_with(">") || tile.page != Page::Main {
+                        break 'a
+                    }
+                    let command = tile.query.strip_prefix(">").unwrap_or("");
+                    tile.results = vec![App {
+                        ranking: 20,
+                        open_command: AppCommand::Function(Function::RunShellCommand(
+                            command.to_string(),
+                        )),
+                        display_name: format!("Shell Command: {}", command),
+                        icons: None,
+                        search_name: "".to_string(),
+                        desc: "Shell Command".to_string(),
+                    }];
+                    return single_item_resize_task(id);
+                }
             }
 
             tile.handle_search_query_changed();
@@ -538,7 +527,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 }
             }
 
-            if is_valid_url.join().unwrap_or(false) {
+            if is_valid_url(&tile.query) {
                 tile.results.push(App {
                     ranking: 0,
                     open_command: AppCommand::Function(Function::OpenWebsite(tile.query.clone())),
@@ -547,13 +536,13 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                     display_name: "Open Website: ".to_string() + &tile.query,
                     search_name: String::new(),
                 });
-            } else if let Some(conversions) = conversions.join().unwrap_or(None) {
+            } else if let Some(conversions) = unit_conversion::convert_query(&tile.query) {
                 tile.results = conversions
                     .into_iter()
                     .map(|conversion| conversion.to_app())
                     .collect();
                 return single_item_resize_task(id);
-            } else if let Some(res) = expr.join().map(|x| x.ok()).unwrap_or(None) {
+            } else if let Some(res) = Expr::from_str(&tile.query).ok() {
                 tile.results.push(App {
                     ranking: 0,
                     open_command: AppCommand::Function(Function::Calculate(res.clone())),
@@ -563,7 +552,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                     search_name: "".to_string(),
                 });
                 return single_item_resize_task(id);
-            } else if web_search.join().unwrap_or(false) {
+            } else if tile.query.ends_with("?") || tile.query.split_whitespace().nth(2).is_some() {
                 tile.results = vec![App {
                     ranking: 0,
                     open_command: AppCommand::Function(Function::GoogleSearch(tile.query.clone())),
