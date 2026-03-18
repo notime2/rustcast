@@ -421,7 +421,11 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             }
 
             tile.query_lc = input.trim().to_lowercase();
-            tile.query = input;
+            tile.query = input.clone();
+
+            if let Some(alias) = tile.config.aliases.get(&input.trim().to_lowercase()) {
+                tile.query_lc = alias.to_string();
+            }
 
             let prev_size = tile.results.len();
 
