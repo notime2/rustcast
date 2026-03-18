@@ -27,6 +27,7 @@ pub struct Config {
     pub show_trayicon: bool,
     pub shells: Vec<Shelly>,
     pub modes: HashMap<String, String>,
+    pub aliases: HashMap<String, String>,
     pub log_path: String,
 }
 
@@ -44,6 +45,7 @@ impl Default for Config {
             show_trayicon: true,
             log_path: "/tmp/rustcast.log".to_string(),
             modes: HashMap::new(),
+            aliases: HashMap::new(),
             shells: vec![],
         }
     }
