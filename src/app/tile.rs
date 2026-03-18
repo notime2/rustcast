@@ -355,7 +355,9 @@ fn handle_clipboard_history() -> impl futures::Stream<Item = Message> {
         loop {
             let byte_rep = if let Ok(a) = clipboard.get_image() {
                 Some(ClipBoardContentType::Image(a))
-            } else if let Ok(a) = clipboard.get_text() {
+            } else if let Ok(a) = clipboard.get_text()
+                && !a.trim().is_empty()
+            {
                 Some(ClipBoardContentType::Text(a))
             } else {
                 None
