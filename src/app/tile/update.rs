@@ -535,7 +535,10 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             if tile.page != Page::FileSearch {
                 tile.handle_search_query_changed();
             } else {
-                tile.results = search_for_file(&tile.query_lc);
+                tile.results = search_for_file(
+                    &tile.query_lc,
+                    tile.config.search_dirs.iter().map(|x| x.as_str()).collect(),
+                );
             }
 
             if !tile.results.is_empty() {

@@ -116,7 +116,7 @@ impl Function {
     }
 }
 
-pub fn search(home: &str, name: &str) -> Vec<App> {
+pub fn search(home: String, name: &str) -> impl Iterator<Item = App> {
     let mut builder = WalkBuilder::new(home);
     builder.follow_links(false);
     builder.threads(10);
@@ -137,13 +137,16 @@ pub fn search(home: &str, name: &str) -> Vec<App> {
             }
         })
         .take(400)
-        .collect()
 }
 
-pub fn search_for_file(name: &str) -> Vec<App> {
+pub fn search_for_file(name: &str, dirs: Vec<&str>) -> Vec<App> {
     let home = std::env::var("HOME").unwrap_or_else(|_| "/".into());
 
-    search(&home, name)
+    dirs.iter().fold(Vec::with_capacity(400), move |vec, dir| {
+        let mut apps = vec.clone();
+        apps.extend(search(dir.replace("~", &home), name));
+        apps
+    })
 }
 
 impl ToApp for DirEntry {
