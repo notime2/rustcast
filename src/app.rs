@@ -82,6 +82,8 @@ pub enum Message {
     SwitchToPage(Page),
     ClipboardHistory(ClipBoardContentType),
     ChangeFocus(ArrowKey, u32),
+    AiQuery(String),
+    AiResponse(String),
 }
 
 /// The window settings for rustcast
