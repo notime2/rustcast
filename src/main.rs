@@ -7,6 +7,7 @@ mod clipboard;
 mod commands;
 mod config;
 mod debounce;
+mod keychain;
 mod platform;
 mod styles;
 mod unit_conversion;
