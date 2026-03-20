@@ -10,5 +10,5 @@
 </p>
 
 <p align="center">
-Fork of Rustcast with AI function.
+Fork of Rustcast with AI function. Type 3+ words to ask AI, or start with <code>?</code> for web search.
 </p>
