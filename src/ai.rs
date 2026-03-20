@@ -30,8 +30,6 @@ pub fn query_ai(config: &AiConfig, query: &str) -> String {
     let response = minreq::post(&config.provider_url)
         .with_header("Authorization", format!("Bearer {api_key}"))
         .with_header("Content-Type", "application/json")
-        .with_header("HTTP-Referer", "https://github.com/notime2/rustcast")
-        .with_header("X-Title", "RustCast")
         .with_body(body.to_string())
         .with_timeout(30)
         .send();

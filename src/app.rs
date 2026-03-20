@@ -198,7 +198,7 @@ impl ToApps for HashMap<String, String> {
                         key.trim().to_owned(),
                     )),
                     search_name: key.to_owned(),
-                    is_ai_response: false,
+
                     desc: "Switch Modes".to_string(),
                     icons: icons.clone(),
                     display_name,
@@ -214,7 +214,6 @@ impl ToApps for HashMap<String, String> {
                 icons: icons.clone(),
                 display_name: "Default mode".to_string(),
                 search_name: "default".to_string(),
-                is_ai_response: false,
             });
         };
 

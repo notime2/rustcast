@@ -47,19 +47,21 @@ pub struct App {
     pub icons: Option<iced::widget::image::Handle>,
     pub display_name: String,
     pub search_name: String,
-    /// When true, the result row expands to fit AI response text
-    pub is_ai_response: bool,
 }
 
 impl App {
+    /// Check if this app is an AI response by examining the Function variant.
+    pub fn is_ai_response(&self) -> bool {
+        matches!(&self.open_command, AppCommand::Function(Function::AiResponse(_)))
+    }
+
     /// Estimate the rendered height for this result item.
     /// AI responses grow based on text length; normal items are fixed at 66px.
     pub fn estimated_height(&self) -> usize {
-        if self.is_ai_response {
-            // ~60 chars per line at size 16 in a 460px-wide area, 20px per line
+        if self.is_ai_response() {
             let lines = (self.display_name.len() as f32 / 55.0).ceil().max(1.0) as usize;
-            let text_height = lines * 20 + 30; // 30 for desc + spacing + padding
-            text_height.max(66).min(400) // min 66, max 400
+            let text_height = lines * 20 + 30;
+            text_height.max(66).min(400)
         } else {
             66
         }
@@ -72,7 +74,6 @@ impl PartialEq for App {
             && self.icons == other.icons
             && self.desc == other.desc
             && self.display_name == other.display_name
-            && self.is_ai_response == other.is_ai_response
     }
 }
 
@@ -86,7 +87,7 @@ impl App {
                 icons: None,
                 display_name: x.to_string(),
                 search_name: x.name().to_string(),
-                is_ai_response: false,
+
                 open_command: AppCommand::Function(Function::CopyToClipboard(
                     ClipBoardContentType::Text(x.to_string()),
                 )),
@@ -118,7 +119,7 @@ impl App {
                 desc: "Easter Egg".to_string(),
                 display_name: "Ferris Plushies".to_string(),
                 search_name: "ferris.rs".to_string(),
-                is_ai_response: false,
+
             },
             App {
                 ranking: 0,
@@ -127,7 +128,7 @@ impl App {
                 icons: icons.clone(),
                 display_name: "Quit RustCast".to_string(),
                 search_name: "quit".to_string(),
-                is_ai_response: false,
+
             },
             App {
                 ranking: 0,
@@ -136,7 +137,7 @@ impl App {
                 icons: icons.clone(),
                 display_name: "Open RustCast Preferences".to_string(),
                 search_name: "settings".to_string(),
-                is_ai_response: false,
+
             },
             App {
                 ranking: 0,
@@ -145,7 +146,7 @@ impl App {
                 icons: icons.clone(),
                 display_name: "Search for an Emoji".to_string(),
                 search_name: "emoji".to_string(),
-                is_ai_response: false,
+
             },
             App {
                 ranking: 0,
@@ -154,7 +155,7 @@ impl App {
                 icons: icons.clone(),
                 display_name: "Clipboard History".to_string(),
                 search_name: "clipboard".to_string(),
-                is_ai_response: false,
+
             },
             App {
                 ranking: 0,
@@ -163,7 +164,7 @@ impl App {
                 icons: icons.clone(),
                 display_name: "Search for a file".to_string(),
                 search_name: "file search".to_string(),
-                is_ai_response: false,
+
             },
             App {
                 ranking: 0,
@@ -172,7 +173,7 @@ impl App {
                 icons: icons.clone(),
                 display_name: "Reload RustCast".to_string(),
                 search_name: "refresh".to_string(),
-                is_ai_response: false,
+
             },
             App {
                 ranking: 0,
@@ -181,7 +182,7 @@ impl App {
                 icons: icons.clone(),
                 display_name: format!("Current RustCast Version: {app_version}"),
                 search_name: "version".to_string(),
-                is_ai_response: false,
+
             },
         ]
     }
@@ -194,6 +195,7 @@ impl App {
         focussed_id: u32,
     ) -> iced::Element<'static, Message> {
         let focused = focussed_id == id_num;
+        let is_ai = self.is_ai_response();
 
         // Title + subtitle (Raycast style)
         let text_block = iced::widget::Column::new()
@@ -212,18 +214,11 @@ impl App {
                     .color(theme.text_color(0.55)),
             );
 
-        let is_ai = self.is_ai_response;
-
         let mut row = Row::new()
-            .align_y(if is_ai {
-                Alignment::Start
-            } else {
-                Alignment::Center
-            })
+            .align_y(Alignment::Center)
             .width(Fill)
             .spacing(10);
 
-        // Only set fixed height for non-AI results
         if !is_ai {
             row = row.height(50);
         }

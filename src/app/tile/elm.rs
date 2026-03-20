@@ -154,7 +154,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             Page::ClipboardHistory | Page::Settings => 385,
             // Height of each emoji is EMOJI_HEIGHT + 20 for padding
             Page::EmojiSearch => std::cmp::min(tile.results.len().div_ceil(6) * 90, 290),
-            _ if tile.results.iter().any(|app| app.is_ai_response) => {
+            _ if tile.results.iter().any(|app| app.is_ai_response()) => {
                 // AI responses: use estimated height from content
                 tile.results
                     .iter()

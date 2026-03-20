@@ -159,7 +159,6 @@ fn discover_apps(
             desc: "Application".to_string(),
             icons,
             search_name: name.to_lowercase(),
-            is_ai_response: false,
             display_name: name,
         })
     })

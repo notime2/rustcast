@@ -82,7 +82,7 @@ impl Default for AiConfig {
         Self {
             provider_url: "https://openrouter.ai/api/v1/chat/completions".to_string(),
             model: "anthropic/claude-sonnet-4".to_string(),
-            trigger: "ai".to_string(),
+            trigger: ":".to_string(),
         }
     }
 }
@@ -234,7 +234,7 @@ impl ToApp for Shelly {
             icons: icon,
             display_name: self_clone.alias,
             search_name: self_clone.alias_lc,
-            is_ai_response: false,
+
         }
     }
 }
