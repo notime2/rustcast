@@ -15,6 +15,7 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use rayon::slice::ParallelSliceMut;
 
+use crate::ai;
 use crate::app::Editable;
 use crate::app::SetConfigBufferFields;
 use crate::app::SetConfigFields;
@@ -30,8 +31,10 @@ use crate::app::menubar::menu_icon;
 use crate::app::tile::AppIndex;
 use crate::app::{Message, Page, tile::Tile};
 use crate::calculator::Expr;
+use crate::clipboard::ClipBoardContentType;
 use crate::commands::Function;
-use crate::config::Config;
+use crate::commands::search_for_file;
+use crate::config::{AiConfig, Config};
 use crate::debounce::DebouncePolicy;
 use crate::unit_conversion;
 use crate::utils::is_valid_url;
@@ -520,6 +523,51 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             Task::none()
         }
 
+        Message::AiQuery(query) => {
+            info!("AI query: {query}");
+            tile.results = vec![App {
+                ranking: 0,
+                open_command: AppCommand::Display,
+                desc: "AI Query".to_string(),
+                icons: None,
+                display_name: "Thinking...".to_string(),
+                search_name: String::new(),
+            }];
+            let ai_config = tile.config.ai.clone();
+            Task::perform(
+                async move {
+                    tokio::task::spawn_blocking(move || ai::query_ai(&ai_config, &query))
+                        .await
+                        .unwrap_or_else(|e| format!("Error: {e}"))
+                },
+                Message::AiResponse,
+            )
+        }
+
+        Message::AiResponse(response) => {
+            info!("AI response received");
+            tile.results = vec![App {
+                ranking: 0,
+                open_command: AppCommand::Function(Function::CopyToClipboard(
+                    ClipBoardContentType::Text(response.clone()),
+                )),
+                desc: "AI Response (click to copy)".to_string(),
+                icons: None,
+                display_name: response,
+                search_name: String::new(),
+            }];
+            let len = tile.results.len();
+            let max_elem = min(5, len);
+            window::latest()
+                .map(|x| x.unwrap())
+                .map(move |id| {
+                    Message::ResizeWindow(
+                        id,
+                        ((max_elem * 55) + 35 + DEFAULT_WINDOW_HEIGHT as usize) as f32,
+                    )
+                })
+        }
+
         Message::SearchQueryChanged(input, id) => {
             tile.focus_id = 0;
 
@@ -650,6 +698,88 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             tile.config = final_config;
             Task::none()
         }
+
+            match tile.query_lc.as_str() {
+                "randomvar" => {
+                    let rand_num = rand::random_range(0..100);
+                    tile.results = vec![App {
+                        ranking: 0,
+                        open_command: AppCommand::Function(Function::RandomVar(rand_num)),
+                        desc: "Easter egg".to_string(),
+                        icons: None,
+                        display_name: rand_num.to_string(),
+                        search_name: String::new(),
+                    }];
+                    return single_item_resize_task(id);
+                }
+                "lemon" => {
+                    tile.results = vec![App {
+                        ranking: 0,
+                        open_command: AppCommand::Display,
+                        desc: "Easter Egg".to_string(),
+                        icons: lemon_icon_handle(),
+                        display_name: "Lemon".to_string(),
+                        search_name: "".to_string(),
+                    }];
+                    return single_item_resize_task(id);
+                }
+                "67" => {
+                    tile.results = vec![App {
+                        ranking: 0,
+                        open_command: AppCommand::Function(Function::RandomVar(67)),
+                        desc: "Easter egg".to_string(),
+                        icons: None,
+                        display_name: 67.to_string(),
+                        search_name: String::new(),
+                    }];
+                    return single_item_resize_task(id);
+                }
+                "cbhist" => {
+                    task = task.chain(Task::done(Message::SwitchToPage(Page::ClipboardHistory)));
+                    tile.page = Page::ClipboardHistory;
+                }
+                "main" => {
+                    if tile.page != Page::Main {
+                        task = task.chain(Task::done(Message::SwitchToPage(Page::Main)));
+                        return Task::batch([zero_item_resize_task(id), task]);
+                    }
+                }
+                query if query.starts_with(&tile.config.ai.trigger)
+                    && query.len() > tile.config.ai.trigger.len()
+                    && query[tile.config.ai.trigger.len()..].starts_with(' ')
+                    && tile.page == Page::Main =>
+                {
+                    let ai_query = tile.query[tile.config.ai.trigger.len()..].trim().to_string();
+                    if !ai_query.is_empty() {
+                        tile.results = vec![App {
+                            ranking: 0,
+                            open_command: AppCommand::Message(Message::AiQuery(ai_query.clone())),
+                            desc: "AI Query".to_string(),
+                            icons: None,
+                            display_name: format!("Ask AI: {}", ai_query),
+                            search_name: String::new(),
+                        }];
+                        return single_item_resize_task(id);
+                    }
+                }
+                query => 'a: {
+                    if !query.starts_with(">") || tile.page != Page::Main {
+                        break 'a;
+                    }
+                    let command = tile.query.strip_prefix(">").unwrap_or("");
+                    tile.results = vec![App {
+                        ranking: 20,
+                        open_command: AppCommand::Function(Function::RunShellCommand(
+                            command.to_string(),
+                        )),
+                        display_name: format!("Shell Command: {}", command),
+                        icons: None,
+                        search_name: "".to_string(),
+                        desc: "Shell Command".to_string(),
+                    }];
+                    return single_item_resize_task(id);
+                }
+            }
 
         Message::WriteConfig(page_switch) => {
             let config_file_path =
