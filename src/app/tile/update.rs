@@ -470,14 +470,12 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             };
             let content_height = ai_app.estimated_height();
             tile.results = vec![ai_app];
-            window::latest()
-                .map(|x| x.unwrap())
-                .map(move |id| {
-                    Message::ResizeWindow(
-                        id,
-                        (content_height + 35 + DEFAULT_WINDOW_HEIGHT as usize) as f32,
-                    )
-                })
+            window::latest().map(|x| x.unwrap()).map(move |id| {
+                Message::ResizeWindow(
+                    id,
+                    (content_height + 35 + DEFAULT_WINDOW_HEIGHT as usize) as f32,
+                )
+            })
         }
 
         Message::SearchQueryChanged(input, id) => {
@@ -565,12 +563,15 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                         return Task::batch([zero_item_resize_task(id), task]);
                     }
                 }
-                query if query.starts_with(&tile.config.ai.trigger)
-                    && query.len() > tile.config.ai.trigger.len()
-                    && query[tile.config.ai.trigger.len()..].starts_with(' ')
-                    && tile.page == Page::Main =>
+                query
+                    if query.starts_with(&tile.config.ai.trigger)
+                        && query.len() > tile.config.ai.trigger.len()
+                        && query[tile.config.ai.trigger.len()..].starts_with(' ')
+                        && tile.page == Page::Main =>
                 {
-                    let ai_query = tile.query[tile.config.ai.trigger.len()..].trim().to_string();
+                    let ai_query = tile.query[tile.config.ai.trigger.len()..]
+                        .trim()
+                        .to_string();
                     if !ai_query.is_empty() {
                         tile.results = vec![App {
                             ranking: 0,

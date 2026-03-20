@@ -146,7 +146,11 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             385
         } else if tile.results.iter().any(|app| app.is_ai_response) {
             // AI responses: use estimated height from content
-            tile.results.iter().map(|app| app.estimated_height()).sum::<usize>().min(400)
+            tile.results
+                .iter()
+                .map(|app| app.estimated_height())
+                .sum::<usize>()
+                .min(400)
         } else {
             std::cmp::min(tile.results.len() * 60, 290)
         };

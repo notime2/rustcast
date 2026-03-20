@@ -36,14 +36,13 @@ pub fn query_ai(config: &AiConfig, query: &str) -> String {
 
     match response {
         Ok(resp) => {
-            let json: serde_json::Value =
-                match serde_json::from_str(resp.as_str().unwrap_or("")) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        error!("AI response parse error: {e}");
-                        return format!("Error parsing response: {e}");
-                    }
-                };
+            let json: serde_json::Value = match serde_json::from_str(resp.as_str().unwrap_or("")) {
+                Ok(v) => v,
+                Err(e) => {
+                    error!("AI response parse error: {e}");
+                    return format!("Error parsing response: {e}");
+                }
+            };
 
             json["choices"][0]["message"]["content"]
                 .as_str()
