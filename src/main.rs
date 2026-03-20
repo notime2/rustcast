@@ -8,6 +8,7 @@ mod commands;
 mod config;
 mod debounce;
 mod keychain;
+mod markdown;
 mod platform;
 mod styles;
 mod unit_conversion;

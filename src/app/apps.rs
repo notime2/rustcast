@@ -8,7 +8,7 @@ use iced::{
     Alignment,
     Length::Fill,
     widget::{
-        Button, Row, Text, container,
+        Button, Row, Text, container, rich_text,
         image::{Handle, Viewer},
         text::Wrapping,
     },
@@ -18,6 +18,7 @@ use crate::{
     app::{Message, Page, RUSTCAST_DESC_NAME},
     clipboard::ClipBoardContentType,
     commands::Function,
+    markdown,
     styles::{result_button_style, result_row_container_style},
     utils::icns_data_to_handle,
 };
@@ -198,21 +199,44 @@ impl App {
         let is_ai = self.is_ai_response();
 
         // Title + subtitle (Raycast style)
-        let text_block = iced::widget::Column::new()
-            .spacing(2)
-            .push(
-                Text::new(self.display_name)
-                    .font(theme.font())
-                    .size(16)
-                    .wrapping(Wrapping::WordOrGlyph)
-                    .color(theme.text_color(1.0)),
-            )
-            .push(
-                Text::new(self.desc)
-                    .font(theme.font())
-                    .size(13)
-                    .color(theme.text_color(0.55)),
-            );
+        let text_block = if is_ai {
+            let md_spans = markdown::parse(&self.display_name);
+            let iced_spans: Vec<_> = md_spans
+                .iter()
+                .map(|s| markdown::to_iced_span(s, theme.text_color(1.0), theme.font()))
+                .collect();
+
+            iced::widget::Column::new()
+                .spacing(2)
+                .push(
+                    rich_text(iced_spans)
+                        .font(theme.font())
+                        .size(15)
+                        .wrapping(Wrapping::WordOrGlyph),
+                )
+                .push(
+                    Text::new(self.desc.clone())
+                        .font(theme.font())
+                        .size(13)
+                        .color(theme.text_color(0.55)),
+                )
+        } else {
+            iced::widget::Column::new()
+                .spacing(2)
+                .push(
+                    Text::new(self.display_name)
+                        .font(theme.font())
+                        .size(16)
+                        .wrapping(Wrapping::WordOrGlyph)
+                        .color(theme.text_color(1.0)),
+                )
+                .push(
+                    Text::new(self.desc.clone())
+                        .font(theme.font())
+                        .size(13)
+                        .color(theme.text_color(0.55)),
+                )
+        };
 
         let mut row = Row::new()
             .align_y(Alignment::Center)
