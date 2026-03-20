@@ -280,7 +280,7 @@ impl App {
         container(content)
             .id(format!("result-{}", id_num))
             .style(move |_| result_row_container_style(&theme, focused))
-            .padding(8)
+            .padding(if is_ai { 0 } else { 8 })
             .width(Fill)
             .into()
     }

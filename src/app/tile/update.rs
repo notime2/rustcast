@@ -146,12 +146,16 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                                 tile.history_index = None;
                                 tile.query.clear();
                                 tile.query_lc.clear();
+                                return Task::none();
                             }
                         }
                     }
                     _ => {}
                 }
-                return Task::none();
+                let query = tile.query.clone();
+                return window::latest()
+                    .map(|id| id.unwrap())
+                    .map(move |id| Message::SearchQueryChanged(query.clone(), id));
             }
 
             let mut return_task = Task::none();
@@ -246,6 +250,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             let q = tile.query.trim().to_string();
             if !q.is_empty() && tile.query_history.last() != Some(&q) {
                 tile.query_history.push(q);
+                crate::app::tile::save_history(&tile.query_history);
             }
             tile.history_index = None;
 
