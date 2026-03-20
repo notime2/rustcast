@@ -131,6 +131,8 @@ pub struct Tile {
     pub height: f32,
     pub file_search_sender: Option<tokio::sync::watch::Sender<(String, Vec<String>)>>,
     debouncer: Debouncer,
+    query_history: Vec<String>,
+    history_index: Option<usize>,
 }
 
 /// A struct to store all the hotkeys
