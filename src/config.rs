@@ -30,6 +30,7 @@ pub struct Config {
     pub aliases: HashMap<String, String>,
     pub search_dirs: Vec<String>,
     pub log_path: String,
+    pub ai: AiConfig,
 }
 
 impl Default for Config {
@@ -53,6 +54,37 @@ impl Default for Config {
             modes: HashMap::new(),
             aliases: HashMap::new(),
             shells: vec![],
+            ai: AiConfig::default(),
+        }
+    }
+}
+
+/// Configuration for the AI query feature.
+///
+/// Add this to your `config.toml`:
+/// ```toml
+/// [ai]
+/// provider_url = "https://openrouter.ai/api/v1/chat/completions"
+/// api_key = "sk-or-v1-your-key-here"
+/// model = "anthropic/claude-sonnet-4"
+/// trigger = "ai"
+/// ```
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
+pub struct AiConfig {
+    pub provider_url: String,
+    pub api_key: String,
+    pub model: String,
+    pub trigger: String,
+}
+
+impl Default for AiConfig {
+    fn default() -> Self {
+        Self {
+            provider_url: "https://openrouter.ai/api/v1/chat/completions".to_string(),
+            api_key: String::new(),
+            model: "anthropic/claude-sonnet-4".to_string(),
+            trigger: "ai".to_string(),
         }
     }
 }

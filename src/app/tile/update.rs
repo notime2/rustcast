@@ -15,6 +15,7 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use rayon::slice::ParallelSliceMut;
 
+use crate::ai;
 use crate::app::ToApp;
 use crate::app::ToApps;
 use crate::app::WINDOW_WIDTH;
@@ -26,9 +27,10 @@ use crate::app::menubar::menu_icon;
 use crate::app::tile::AppIndex;
 use crate::app::{Message, Page, tile::Tile};
 use crate::calculator::Expr;
+use crate::clipboard::ClipBoardContentType;
 use crate::commands::Function;
 use crate::commands::search_for_file;
-use crate::config::Config;
+use crate::config::{AiConfig, Config};
 use crate::unit_conversion;
 use crate::utils::is_valid_url;
 use crate::{app::ArrowKey, platform::focus_this_app};
@@ -431,6 +433,51 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             Task::none()
         }
 
+        Message::AiQuery(query) => {
+            info!("AI query: {query}");
+            tile.results = vec![App {
+                ranking: 0,
+                open_command: AppCommand::Display,
+                desc: "AI Query".to_string(),
+                icons: None,
+                display_name: "Thinking...".to_string(),
+                search_name: String::new(),
+            }];
+            let ai_config = tile.config.ai.clone();
+            Task::perform(
+                async move {
+                    tokio::task::spawn_blocking(move || ai::query_ai(&ai_config, &query))
+                        .await
+                        .unwrap_or_else(|e| format!("Error: {e}"))
+                },
+                Message::AiResponse,
+            )
+        }
+
+        Message::AiResponse(response) => {
+            info!("AI response received");
+            tile.results = vec![App {
+                ranking: 0,
+                open_command: AppCommand::Function(Function::CopyToClipboard(
+                    ClipBoardContentType::Text(response.clone()),
+                )),
+                desc: "AI Response (click to copy)".to_string(),
+                icons: None,
+                display_name: response,
+                search_name: String::new(),
+            }];
+            let len = tile.results.len();
+            let max_elem = min(5, len);
+            window::latest()
+                .map(|x| x.unwrap())
+                .map(move |id| {
+                    Message::ResizeWindow(
+                        id,
+                        ((max_elem * 55) + 35 + DEFAULT_WINDOW_HEIGHT as usize) as f32,
+                    )
+                })
+        }
+
         Message::SearchQueryChanged(input, id) => {
             let mut task = Task::none();
             tile.focus_id = 0;
@@ -511,6 +558,24 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                     if tile.page != Page::Main {
                         task = task.chain(Task::done(Message::SwitchToPage(Page::Main)));
                         return Task::batch([zero_item_resize_task(id), task]);
+                    }
+                }
+                query if query.starts_with(&tile.config.ai.trigger)
+                    && query.len() > tile.config.ai.trigger.len()
+                    && query[tile.config.ai.trigger.len()..].starts_with(' ')
+                    && tile.page == Page::Main =>
+                {
+                    let ai_query = tile.query[tile.config.ai.trigger.len()..].trim().to_string();
+                    if !ai_query.is_empty() {
+                        tile.results = vec![App {
+                            ranking: 0,
+                            open_command: AppCommand::Message(Message::AiQuery(ai_query.clone())),
+                            desc: "AI Query".to_string(),
+                            icons: None,
+                            display_name: format!("Ask AI: {}", ai_query),
+                            search_name: String::new(),
+                        }];
+                        return single_item_resize_task(id);
                     }
                 }
                 query => 'a: {

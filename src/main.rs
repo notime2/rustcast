@@ -1,5 +1,6 @@
 #![deny(clippy::dbg_macro)]
 
+mod ai;
 mod app;
 mod calculator;
 mod clipboard;
