@@ -82,6 +82,8 @@ pub fn new(hotkey: HotKey, config: &Config) -> (Tile, Task<Message>) {
             sender: None,
             page: Page::Main,
             height: DEFAULT_WINDOW_HEIGHT,
+            query_history: Vec::new(),
+            history_index: None,
         },
         Task::batch([open.map(|_| Message::OpenWindow)]),
     )

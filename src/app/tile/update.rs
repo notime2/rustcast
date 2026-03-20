@@ -119,6 +119,41 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
         }
 
         Message::ChangeFocus(key, amount) => {
+            // Navigate query history when results are empty and on Main page
+            if tile.results.is_empty()
+                && tile.page == Page::Main
+                && !tile.query_history.is_empty()
+                && matches!(key, ArrowKey::Up | ArrowKey::Down)
+            {
+                match key {
+                    ArrowKey::Up => {
+                        let idx = match tile.history_index {
+                            Some(i) if i > 0 => i - 1,
+                            Some(i) => i,
+                            None => tile.query_history.len() - 1,
+                        };
+                        tile.history_index = Some(idx);
+                        tile.query = tile.query_history[idx].clone();
+                        tile.query_lc = tile.query.to_lowercase();
+                    }
+                    ArrowKey::Down => {
+                        if let Some(i) = tile.history_index {
+                            if i + 1 < tile.query_history.len() {
+                                tile.history_index = Some(i + 1);
+                                tile.query = tile.query_history[i + 1].clone();
+                                tile.query_lc = tile.query.to_lowercase();
+                            } else {
+                                tile.history_index = None;
+                                tile.query.clear();
+                                tile.query_lc.clear();
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+                return Task::none();
+            }
+
             let mut return_task = Task::none();
             for _ in 0..amount {
                 let len = match tile.page {
@@ -207,6 +242,13 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
         }
 
         Message::OpenFocused => {
+            // Save non-empty queries to history
+            let q = tile.query.trim().to_string();
+            if !q.is_empty() && tile.query_history.last() != Some(&q) {
+                tile.query_history.push(q);
+            }
+            tile.history_index = None;
+
             // TODO: update ranking here
             match tile.results.get(tile.focus_id as usize) {
                 Some(App {
@@ -477,6 +519,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
         Message::SearchQueryChanged(input, id) => {
             let mut task = Task::none();
             tile.focus_id = 0;
+            tile.history_index = None;
 
             if tile.config.haptic_feedback {
                 perform_haptic(HapticPattern::Alignment);

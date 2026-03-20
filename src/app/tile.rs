@@ -129,6 +129,8 @@ pub struct Tile {
     sender: Option<ExtSender>,
     page: Page,
     pub height: f32,
+    query_history: Vec<String>,
+    history_index: Option<usize>,
 }
 
 /// A struct to store all the hotkeys
