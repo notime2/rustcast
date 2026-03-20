@@ -88,7 +88,7 @@ pub fn new(hotkey: HotKey, config: &Config) -> (Tile, Task<Message>) {
             height: DEFAULT_WINDOW_HEIGHT,
             file_search_sender: None,
             debouncer: Debouncer::new(config.debounce_delay),
-            query_history: Vec::new(),
+            query_history: super::load_history(),
             history_index: None,
         },
         Task::batch([open.map(|_| Message::OpenWindow)]),

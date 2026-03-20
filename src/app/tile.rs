@@ -144,6 +144,33 @@ pub struct Hotkeys {
     pub clipboard_hotkey: HotKey,
 }
 
+const MAX_HISTORY: usize = 100;
+
+fn history_path() -> std::path::PathBuf {
+    let home = std::env::var("HOME").unwrap_or_default();
+    std::path::PathBuf::from(home).join(".config/rustcast/history.txt")
+}
+
+pub fn load_history() -> Vec<String> {
+    std::fs::read_to_string(history_path())
+        .unwrap_or_default()
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(String::from)
+        .collect()
+}
+
+pub fn save_history(history: &[String]) {
+    let path = history_path();
+    let data: Vec<&String> = if history.len() > MAX_HISTORY {
+        history[history.len() - MAX_HISTORY..].iter().collect()
+    } else {
+        history.iter().collect()
+    };
+    let content = data.iter().map(|s| s.as_str()).collect::<Vec<_>>().join("\n");
+    let _ = std::fs::write(path, content);
+}
+
 impl Tile {
     /// This returns the theme of the window
     pub fn theme(&self, _: window::Id) -> Option<Theme> {
