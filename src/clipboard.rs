@@ -37,7 +37,6 @@ impl ToApp for ClipBoardContentType {
             icons: None,
             display_name,
             search_name,
-            is_ai_response: false,
         }
     }
 }

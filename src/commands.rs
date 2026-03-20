@@ -28,6 +28,8 @@ pub enum Function {
     GoogleSearch(String),
     Calculate(Expr),
     OpenPrefPane,
+    AiQuery(String),
+    AiResponse(String),
     Quit,
 }
 
@@ -101,6 +103,15 @@ impl Function {
                 }
             },
 
+            Function::AiQuery(_) => {
+                // Handled asynchronously in update.rs
+            }
+            Function::AiResponse(text) => {
+                Clipboard::new()
+                    .unwrap()
+                    .set_text(text)
+                    .unwrap_or(());
+            }
             Function::OpenPrefPane => {
                 thread::spawn(move || {
                     NSWorkspace::new().openURL(&NSURL::fileURLWithPath(
@@ -166,7 +177,6 @@ impl ToApp for DirEntry {
             icons: None,
             display_name: self.file_name().to_str().unwrap_or("").to_string(),
             search_name: "".to_string(),
-            is_ai_response: false,
         }
     }
 }

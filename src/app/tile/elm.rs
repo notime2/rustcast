@@ -144,7 +144,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
 
         let height = if tile.page == Page::ClipboardHistory {
             385
-        } else if tile.results.iter().any(|app| app.is_ai_response) {
+        } else if tile.results.iter().any(|app| app.is_ai_response()) {
             // AI responses: use estimated height from content
             tile.results
                 .iter()
