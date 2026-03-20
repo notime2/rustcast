@@ -9,4 +9,6 @@
   An open-source, Rust-powered productivity, blazing fast popup launcher for apps, utilities, and workflows.
 </p>
 
+<p align="center">
 Fork of Rustcast with AI function.
+</p>
