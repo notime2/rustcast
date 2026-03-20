@@ -532,6 +532,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 icons: None,
                 display_name: "Thinking...".to_string(),
                 search_name: String::new(),
+                is_ai_response: false,
             }];
             let ai_config = tile.config.ai.clone();
             Task::perform(
@@ -546,7 +547,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
 
         Message::AiResponse(response) => {
             info!("AI response received");
-            tile.results = vec![App {
+            let ai_app = App {
                 ranking: 0,
                 open_command: AppCommand::Function(Function::CopyToClipboard(
                     ClipBoardContentType::Text(response.clone()),
@@ -555,15 +556,16 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 icons: None,
                 display_name: response,
                 search_name: String::new(),
-            }];
-            let len = tile.results.len();
-            let max_elem = min(5, len);
+                is_ai_response: true,
+            };
+            let content_height = ai_app.estimated_height();
+            tile.results = vec![ai_app];
             window::latest()
                 .map(|x| x.unwrap())
                 .map(move |id| {
                     Message::ResizeWindow(
                         id,
-                        ((max_elem * 55) + 35 + DEFAULT_WINDOW_HEIGHT as usize) as f32,
+                        (content_height + 35 + DEFAULT_WINDOW_HEIGHT as usize) as f32,
                     )
                 })
         }
@@ -709,6 +711,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                         icons: None,
                         display_name: rand_num.to_string(),
                         search_name: String::new(),
+                        is_ai_response: false,
                     }];
                     return single_item_resize_task(id);
                 }
@@ -720,6 +723,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                         icons: lemon_icon_handle(),
                         display_name: "Lemon".to_string(),
                         search_name: "".to_string(),
+                        is_ai_response: false,
                     }];
                     return single_item_resize_task(id);
                 }
@@ -731,6 +735,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                         icons: None,
                         display_name: 67.to_string(),
                         search_name: String::new(),
+                        is_ai_response: false,
                     }];
                     return single_item_resize_task(id);
                 }
@@ -758,6 +763,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                             icons: None,
                             display_name: format!("Ask AI: {}", ai_query),
                             search_name: String::new(),
+                            is_ai_response: false,
                         }];
                         return single_item_resize_task(id);
                     }
@@ -776,6 +782,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                         icons: None,
                         search_name: "".to_string(),
                         desc: "Shell Command".to_string(),
+                        is_ai_response: false,
                     }];
                     return single_item_resize_task(id);
                 }

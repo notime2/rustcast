@@ -131,3 +131,25 @@ pub fn path_to_app(absolute_path: &str, home_dir: &str) -> Option<App> {
         search_name: filename.to_lowercase(),
     })
 }
+
+impl ToApp for DirEntry {
+    fn to_app(&self) -> App {
+        let path = "~".to_string()
+            + self
+                .path()
+                .to_str()
+                .unwrap_or("")
+                .to_string()
+                .strip_prefix(&std::env::var("HOME").unwrap_or("".to_string()))
+                .unwrap_or("");
+        App {
+            ranking: 0,
+            open_command: AppCommand::Function(Function::OpenApp(path.clone())),
+            desc: path,
+            icons: None,
+            display_name: self.file_name().to_str().unwrap_or("").to_string(),
+            search_name: "".to_string(),
+            is_ai_response: false,
+        }
+    }
+}
