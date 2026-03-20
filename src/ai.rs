@@ -1,9 +1,10 @@
 //! AI query module for RustCast.
 //!
 //! Sends user queries to a configurable AI provider (e.g. OpenRouter)
-//! and returns the response text.
+//! and returns the response text. API keys are stored in the macOS Keychain.
 
 use crate::config::AiConfig;
+use crate::keychain;
 use log::error;
 
 /// Sends a query to the configured AI provider and returns the response.
@@ -11,9 +12,10 @@ use log::error;
 /// This function is blocking and should be called from within a
 /// `tokio::task::spawn_blocking` context.
 pub fn query_ai(config: &AiConfig, query: &str) -> String {
-    if config.api_key.is_empty() {
-        return "Error: AI api_key is not set in config.toml".to_string();
-    }
+    let api_key = match keychain::get_api_key() {
+        Some(key) if !key.is_empty() => key,
+        _ => return "Error: AI API key is not set. Use `:setkey <your-api-key>` to store it securely.".to_string(),
+    };
 
     let body = serde_json::json!({
         "model": config.model,
@@ -26,7 +28,7 @@ pub fn query_ai(config: &AiConfig, query: &str) -> String {
     });
 
     let response = minreq::post(&config.provider_url)
-        .with_header("Authorization", format!("Bearer {}", config.api_key))
+        .with_header("Authorization", format!("Bearer {api_key}"))
         .with_header("Content-Type", "application/json")
         .with_header("HTTP-Referer", "https://github.com/notime2/rustcast")
         .with_header("X-Title", "RustCast")

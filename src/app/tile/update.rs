@@ -30,7 +30,8 @@ use crate::calculator::Expr;
 use crate::clipboard::ClipBoardContentType;
 use crate::commands::Function;
 use crate::commands::search_for_file;
-use crate::config::{AiConfig, Config};
+use crate::config::Config;
+use crate::keychain;
 use crate::unit_conversion;
 use crate::utils::is_valid_url;
 use crate::{app::ArrowKey, platform::focus_this_app};
@@ -562,6 +563,43 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                         task = task.chain(Task::done(Message::SwitchToPage(Page::Main)));
                         return Task::batch([zero_item_resize_task(id), task]);
                     }
+                }
+                query if query.starts_with(":setkey ") && tile.page == Page::Main => {
+                    let key = tile.query[8..].trim().to_string();
+                    let msg = if key.is_empty() {
+                        "Usage: :setkey <your-api-key>".to_string()
+                    } else {
+                        match keychain::set_api_key(&key) {
+                            Ok(()) => "API key saved to Keychain".to_string(),
+                            Err(e) => e,
+                        }
+                    };
+                    tile.results = vec![App {
+                        ranking: 0,
+                        open_command: AppCommand::Display,
+                        desc: "Keychain".to_string(),
+                        icons: None,
+                        display_name: msg,
+                        search_name: String::new(),
+                        is_ai_response: false,
+                    }];
+                    return single_item_resize_task(id);
+                }
+                ":delkey" if tile.page == Page::Main => {
+                    let msg = match keychain::delete_api_key() {
+                        Ok(()) => "API key removed from Keychain".to_string(),
+                        Err(e) => e,
+                    };
+                    tile.results = vec![App {
+                        ranking: 0,
+                        open_command: AppCommand::Display,
+                        desc: "Keychain".to_string(),
+                        icons: None,
+                        display_name: msg,
+                        search_name: String::new(),
+                        is_ai_response: false,
+                    }];
+                    return single_item_resize_task(id);
                 }
                 query
                     if query.starts_with(&tile.config.ai.trigger)

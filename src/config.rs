@@ -65,15 +65,16 @@ impl Default for Config {
 /// ```toml
 /// [ai]
 /// provider_url = "https://openrouter.ai/api/v1/chat/completions"
-/// api_key = "sk-or-v1-your-key-here"
 /// model = "anthropic/claude-sonnet-4"
 /// trigger = "ai"
 /// ```
+///
+/// The API key is stored securely in the macOS Keychain.
+/// Set it via the app by typing `:setkey <your-api-key>` in the search bar.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
 pub struct AiConfig {
     pub provider_url: String,
-    pub api_key: String,
     pub model: String,
     pub trigger: String,
 }
@@ -82,7 +83,6 @@ impl Default for AiConfig {
     fn default() -> Self {
         Self {
             provider_url: "https://openrouter.ai/api/v1/chat/completions".to_string(),
-            api_key: String::new(),
             model: "anthropic/claude-sonnet-4".to_string(),
             trigger: "ai".to_string(),
         }
