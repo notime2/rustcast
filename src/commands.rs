@@ -1,7 +1,6 @@
 //! This handles all the different commands that rustcast can perform, such as opening apps,
 //! copying to clipboard, etc.
 use std::{process::Command, thread};
-use log::info;
 
 use arboard::Clipboard;
 use ignore::{DirEntry, WalkBuilder};
