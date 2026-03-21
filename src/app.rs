@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 use crate::app::apps::{App, AppCommand, ICNS_ICON};
 use crate::commands::Function;
-use crate::debounce::DebouncePolicy;
 use crate::config::Config;
+use crate::debounce::DebouncePolicy;
 use crate::utils::icns_data_to_handle;
 use crate::{app::tile::ExtSender, clipboard::ClipBoardContentType};
 use iced::time::Duration;
