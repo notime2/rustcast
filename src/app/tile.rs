@@ -7,6 +7,7 @@ use crate::clipboard::ClipBoardContentType;
 use crate::config::Config;
 use crate::utils::open_settings;
 use crate::{app::apps::App, platform::default_app_paths};
+use crate::debounce::Debouncer;
 
 use arboard::Clipboard;
 use global_hotkey::hotkey::HotKey;
@@ -33,7 +34,7 @@ use std::fmt::Debug;
 use std::fs;
 use std::path::Path;
 use std::str::FromStr;
-use std::time::{Duration, Instant};
+use std::time::{Duration};
 
 /// This is a wrapper around the sender to disable dropping
 #[derive(Clone, Debug)]
@@ -129,7 +130,7 @@ pub struct Tile {
     sender: Option<ExtSender>,
     page: Page,
     pub height: f32,
-    search_debounce: Option<Instant>,
+    debouncer: Debouncer,
 }
 
 /// A struct to store all the hotkeys

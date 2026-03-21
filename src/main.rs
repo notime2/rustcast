@@ -9,6 +9,7 @@ mod platform;
 mod styles;
 mod unit_conversion;
 mod utils;
+mod debounce;
 
 use std::{fs::OpenOptions, path::Path};
 

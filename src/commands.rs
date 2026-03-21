@@ -121,7 +121,6 @@ pub fn search(home: &str, name: &str) -> Vec<App> {
     let mut builder = WalkBuilder::new(home);
     builder.follow_links(false);
     builder.threads(10);
-    info!("DEBUG: file search executed");
 
     let name_clone = name.to_string();
     builder
