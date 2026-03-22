@@ -553,7 +553,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
 
             tile.config = final_config;
 
-            Task::none()
+            Task::done(Message::ReloadConfig)
         }
 
         Message::WriteConfig => {
