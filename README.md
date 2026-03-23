@@ -34,6 +34,10 @@
 **Plugins**:
 [RustCast Library for shell scripts](https://github.com/unsecretised/rustcast-library)
 
+> For support use github discussions / issues / the discord
+> 
+> You can also contact unsecretised / secretised at [admin@rustcast.app](mailto:admin+gh@rustcast.app)
+
 ![RustCast Demo](./docs/rustcast-latest-demo.png)
 
 ## Installation:
