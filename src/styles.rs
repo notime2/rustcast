@@ -1,7 +1,8 @@
 //! This handles most of the styling for the rustcast elements
 use crate::config::Theme as ConfigTheme;
+use iced::Shadow;
 use iced::border::Radius;
-use iced::widget::{button, checkbox, container, slider};
+use iced::widget::{button, checkbox, container, scrollable, slider};
 use iced::{Background, Border, Color, widget::text_input};
 
 /// Helper: mix base color with white (simple “tint”)
@@ -56,6 +57,51 @@ pub fn result_button_style(theme: &ConfigTheme) -> button::Style {
         text_color: theme.text_color(1.),
         background: Some(Background::Color(theme.bg_color())),
         ..Default::default()
+    }
+}
+
+pub fn results_scrollbar_style(tile: &ConfigTheme) -> scrollable::Style {
+    let clr = with_alpha(tile.bg_color(), 0.7);
+
+    scrollable::Style {
+        container: container::Style {
+            text_color: None,
+            background: None,
+            border: Border::default(),
+            shadow: Shadow::default(),
+            snap: false,
+        },
+        vertical_rail: scrollable::Rail {
+            background: None,
+            border: Border {
+                color: clr,
+                width: 1.,
+                radius: Radius::new(10),
+            },
+            scroller: scrollable::Scroller {
+                background: Background::Color(tile.text_color(0.7)),
+                border: Border {
+                    color: tile.text_color(1.),
+                    width: 0.1,
+                    radius: Radius::new(0),
+                },
+            },
+        },
+        horizontal_rail: scrollable::Rail {
+            background: None,
+            border: Border::default(),
+            scroller: scrollable::Scroller {
+                background: Background::Color(Color::TRANSPARENT),
+                border: Border::default(),
+            },
+        },
+        gap: None,
+        auto_scroll: scrollable::AutoScroll {
+            background: Background::Color(Color::TRANSPARENT),
+            border: Border::default(),
+            shadow: Shadow::default(),
+            icon: Color::TRANSPARENT,
+        },
     }
 }
 

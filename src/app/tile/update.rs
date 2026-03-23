@@ -90,10 +90,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             match tile.page {
                 Page::Main => {}
                 Page::Settings => {
-                    return Task::batch([
-                        Task::done(Message::WriteConfig),
-                        Task::done(Message::SwitchToPage(Page::Main)),
-                    ]);
+                    return Task::done(Message::WriteConfig(true));
                 }
                 _ => {
                     return Task::done(Message::SwitchToPage(Page::Main));
@@ -537,6 +534,9 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 SetConfigFields::SetThemeFields(SetConfigThemeFields::ShowIcons(icns)) => {
                     final_config.theme.show_icons = icns
                 }
+                SetConfigFields::SetThemeFields(SetConfigThemeFields::ShowScrollBar(show)) => {
+                    final_config.theme.show_scroll_bar = show
+                }
                 SetConfigFields::SetThemeFields(SetConfigThemeFields::BackgroundColor(r, g, b)) => {
                     final_config.theme.background_color = (r, g, b)
                 }
@@ -556,11 +556,10 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             };
 
             tile.config = final_config;
-
-            Task::done(Message::ReloadConfig)
+            Task::none()
         }
 
-        Message::WriteConfig => {
+        Message::WriteConfig(page_switch) => {
             let config_file_path =
                 std::env::var("HOME").unwrap_or("".to_string()) + "/.config/rustcast/config.toml";
 
@@ -580,7 +579,14 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 })
                 .ok();
 
-            Task::none()
+            Task::batch([
+                Task::done(Message::ReloadConfig),
+                if page_switch {
+                    Task::done(Message::SwitchToPage(Page::Main))
+                } else {
+                    Task::none()
+                },
+            ])
         }
 
         Message::DebouncedSearch(id) => {

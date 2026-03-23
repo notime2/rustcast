@@ -74,7 +74,7 @@ impl Default for Theme {
             background_color: (0.0, 0.0, 0.0),
             blur: false,
             show_icons: true,
-            show_scroll_bar: true,
+            show_scroll_bar: false,
             font: None,
         }
     }

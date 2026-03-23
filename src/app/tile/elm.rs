@@ -20,7 +20,9 @@ use crate::app::tile::{AppIndex, Hotkeys};
 use crate::app::{DEFAULT_WINDOW_HEIGHT, ToApp, ToApps};
 use crate::config::Theme;
 use crate::debounce::Debouncer;
-use crate::styles::{contents_style, glass_border, glass_surface, rustcast_text_input_style};
+use crate::styles::{
+    contents_style, glass_border, glass_surface, results_scrollbar_style, rustcast_text_input_style,
+};
 use crate::{app::WINDOW_WIDTH, platform};
 use crate::{app::pages::clipboard::clipboard_view, platform::get_installed_apps};
 use crate::{
@@ -105,16 +107,17 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             .style(move |_, _| rustcast_text_input_style(&tile.config.theme))
             .padding(20);
 
-        let scrollbar_direction = if tile.config.theme.show_scroll_bar {
-            Direction::Vertical(
-                Scrollbar::new()
-                    .width(10)
-                    .scroller_width(10)
-                    .anchor(Anchor::Start),
-            )
-        } else {
-            Direction::Vertical(Scrollbar::hidden())
-        };
+        let scrollbar_direction =
+            if !tile.config.theme.show_scroll_bar || tile.page == Page::Settings {
+                Direction::Vertical(Scrollbar::hidden())
+            } else {
+                Direction::Vertical(
+                    Scrollbar::new()
+                        .width(1)
+                        .scroller_width(1.1)
+                        .anchor(Anchor::Start),
+                )
+            };
 
         let results = match tile.page {
             Page::ClipboardHistory => clipboard_view(
@@ -151,7 +154,9 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             _ => std::cmp::min(tile.results.len() * 60, 290),
         };
 
+        let theme = tile.config.theme.clone();
         let scrollable = Scrollable::with_direction(results, scrollbar_direction)
+            .style(move |_, _| results_scrollbar_style(&theme))
             .id("results")
             .height(height as u32);
 
