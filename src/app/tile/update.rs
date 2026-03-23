@@ -276,15 +276,8 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                     .ok();
             }
 
-            let mut new_options = get_installed_apps(new_config.theme.show_icons);
-            new_options.extend(new_config.shells.iter().map(|x| x.to_app()));
-            new_options.extend(new_config.modes.to_apps());
-            new_options.extend(App::basic_apps());
-            new_options.par_sort_by_key(|x| x.display_name.len());
-
             tile.theme = new_config.theme.to_owned().into();
             tile.config = new_config;
-            tile.options = AppIndex::from_apps(new_options);
             Task::none()
         }
 
@@ -411,6 +404,17 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                     .map(|x| x.unwrap())
                     .map(move |x| Message::SearchQueryChanged(updated_query.clone(), x)),
             ])
+        }
+
+        Message::UpdateApps => {
+            let mut new_options = get_installed_apps(tile.config.theme.show_icons);
+            new_options.extend(tile.config.shells.iter().map(|x| x.to_app()));
+            new_options.extend(tile.config.modes.to_apps());
+            new_options.extend(App::basic_apps());
+            new_options.par_sort_by_key(|x| x.display_name.len());
+            tile.options = AppIndex::from_apps(new_options);
+
+            Task::none()
         }
 
         Message::ClearSearchResults => {

@@ -92,6 +92,7 @@ pub enum Message {
     HideTrayIcon,
     SwitchMode(String),
     ReloadConfig,
+    UpdateApps,
     SetSender(ExtSender),
     SwitchToPage(Page),
     ClipboardHistory(ClipBoardContentType),

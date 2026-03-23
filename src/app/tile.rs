@@ -7,6 +7,7 @@ use crate::app::{ArrowKey, Message, Move, Page};
 use crate::clipboard::ClipBoardContentType;
 use crate::config::Config;
 use crate::debounce::Debouncer;
+use crate::platform::default_app_paths;
 
 use arboard::Clipboard;
 use global_hotkey::hotkey::HotKey;
@@ -176,6 +177,7 @@ impl Tile {
         });
         Subscription::batch([
             Subscription::run(handle_hotkeys),
+            Subscription::run(handle_hot_reloading),
             keyboard,
             Subscription::run(handle_recipient),
             Subscription::run(check_version),
@@ -387,6 +389,45 @@ async fn read_mdfind_results(
             Err(_) => break,
         }
     }
+}
+
+fn handle_hot_reloading() -> impl futures::Stream<Item = Message> {
+    stream::channel(100, async |mut output| {
+        let paths = default_app_paths();
+        let mut total_files: usize = paths
+            .par_iter()
+            .map(|dir| count_dirs_in_dir(std::path::Path::new(dir)))
+            .sum();
+
+        loop {
+            let current_total_files: usize = paths
+                .par_iter()
+                .map(|dir| count_dirs_in_dir(std::path::Path::new(dir)))
+                .sum();
+
+            if total_files != current_total_files {
+                total_files = current_total_files;
+                info!("App count was changed");
+                let _ = output.send(Message::UpdateApps).await;
+            }
+
+            tokio::time::sleep(Duration::from_millis(1000)).await;
+        }
+    })
+}
+
+/// Helper fn for counting directories (since macos `.app`'s are directories) inside a directory
+fn count_dirs_in_dir(dir: impl AsRef<std::path::Path>) -> usize {
+    // Read the directory; if it fails, treat as empty
+    let entries = match std::fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return 0,
+    };
+
+    entries
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().map(|t| t.is_dir()).unwrap_or(false))
+        .count()
 }
 
 /// Async subscription that spawns `mdfind` for file search queries.
