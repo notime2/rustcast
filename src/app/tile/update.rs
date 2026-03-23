@@ -215,8 +215,16 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
         }
 
         Message::OpenFocused => {
-            // TODO: update ranking here
-            match tile.results.get(tile.focus_id as usize) {
+            info!("Open Focussed called");
+            let results = if tile.page == Page::ClipboardHistory {
+                tile.clipboard_content
+                    .iter()
+                    .map(|x| x.to_app().to_owned())
+                    .collect()
+            } else {
+                tile.results.clone()
+            };
+            match results.get(tile.focus_id as usize) {
                 Some(App {
                     search_name: name,
                     open_command: AppCommand::Function(func),
