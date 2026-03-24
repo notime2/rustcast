@@ -6,12 +6,15 @@ use iced::{
         Scrollable,
         image::{Handle, Viewer},
         scrollable::{Direction, Scrollbar},
+        text::Wrapping,
+        text_input,
     },
 };
 
 use crate::{
-    app::{ToApp, pages::prelude::*},
+    app::{Editable, ToApp, pages::prelude::*},
     clipboard::ClipBoardContentType,
+    styles::{delete_button_style, settings_text_input_item_style},
 };
 
 /// The clipboard view
@@ -30,60 +33,36 @@ pub fn clipboard_view(
 ) -> Element<'static, Message> {
     let theme_clone = theme.clone();
     let theme_clone_2 = theme.clone();
-    let viewport_content: Element<'static, Message> = match clipboard_content
-        .get(focussed_id as usize)
-    {
-        Some(content) => match content {
-            ClipBoardContentType::Text(txt) => Scrollable::with_direction(
-                Text::new(txt.to_owned())
-                    .height(Length::Fill)
-                    .width(Length::Fill)
-                    .align_x(Alignment::Start)
-                    .font(theme.font())
-                    .size(16),
-                Direction::Both {
-                    vertical: Scrollbar::new().scroller_width(0.).width(0.),
-                    horizontal: Scrollbar::new().scroller_width(0.).width(0.),
-                },
-            )
-            .into(),
-
-            ClipBoardContentType::Image(data) => {
-                let bytes = data.to_owned_img().into_owned_bytes();
-                container(
-                    Viewer::new(
-                        Handle::from_rgba(data.width as u32, data.height as u32, bytes.to_vec())
-                            .clone(),
-                    )
-                    .content_fit(ContentFit::ScaleDown)
-                    .scale_step(0.)
-                    .max_scale(1.)
-                    .min_scale(1.),
-                )
-                .padding(10)
-                .style(|_| container::Style {
-                    border: iced::Border {
-                        color: iced::Color::WHITE,
-                        width: 1.,
-                        radius: Radius::new(0.),
-                    },
-                    ..Default::default()
-                })
-                .width(Length::Fill)
-                .into()
-            }
-        },
-        None => Text::new("").into(),
-    };
-    container(Row::from_vec(vec![
+    if clipboard_content.is_empty() {
+        return container(
+            Text::new("Copy something to use the clipboard history")
+                .font(theme.font())
+                .size(30)
+                .center()
+                .wrapping(Wrapping::WordOrGlyph),
+        )
+        .height(Length::Fill)
+        .width(Length::Fill)
+        .style(move |_| result_row_container_style(&theme_clone, false))
+        .align_x(Alignment::Center)
+        .align_y(Alignment::Center)
+        .into();
+    }
+    let viewport_content: Element<'static, Message> =
+        match clipboard_content.get(focussed_id as usize) {
+            Some(content) => viewport_content(content, &theme),
+            None => Text::new("").into(),
+        };
+    container(Row::from_iter([
         container(
-            iced::widget::scrollable(
+            Scrollable::with_direction(
                 Column::from_iter(clipboard_content.iter().enumerate().map(|(i, content)| {
                     content
                         .to_app()
                         .render(theme.clone(), i as u32, focussed_id)
                 }))
                 .width(WINDOW_WIDTH / 3.),
+                Direction::Vertical(Scrollbar::hidden()),
             )
             .id("results"),
         )
@@ -98,5 +77,94 @@ pub fn clipboard_view(
             .into(),
     ]))
     .height(280)
+    .into()
+}
+
+fn viewport_content(content: &ClipBoardContentType, theme: &Theme) -> Element<'static, Message> {
+    let viewer: Element<'static, Message> = match content {
+        ClipBoardContentType::Text(txt) => Scrollable::with_direction(
+            container(
+                Text::new(txt.to_owned())
+                    .height(Length::Fill)
+                    .width(Length::Fill)
+                    .align_x(Alignment::Start)
+                    .font(theme.font())
+                    .size(16),
+            )
+            .width(Length::Fill)
+            .height(Length::Fill),
+            Direction::Both {
+                vertical: Scrollbar::hidden(),
+                horizontal: Scrollbar::hidden(),
+            },
+        )
+        .height(Length::Fill)
+        .width(Length::Fill)
+        .into(),
+
+        ClipBoardContentType::Image(data) => {
+            let bytes = data.to_owned_img().into_owned_bytes();
+            container(
+                Viewer::new(
+                    Handle::from_rgba(data.width as u32, data.height as u32, bytes.to_vec())
+                        .clone(),
+                )
+                .content_fit(ContentFit::ScaleDown)
+                .scale_step(0.)
+                .max_scale(1.)
+                .min_scale(1.),
+            )
+            .padding(10)
+            .style(|_| container::Style {
+                border: iced::Border {
+                    color: iced::Color::WHITE,
+                    width: 1.,
+                    radius: Radius::new(0.),
+                },
+                ..Default::default()
+            })
+            .width(Length::Fill)
+            .into()
+        }
+    };
+
+    let theme_clone = theme.clone();
+    Column::from_iter([
+        viewer,
+        container(
+            Button::new("Delete")
+                .on_press(Message::EditClipboardHistory(Editable::Delete(
+                    content.to_owned(),
+                )))
+                .style(move |_, _| delete_button_style(&theme_clone)),
+        )
+        .width(Length::Fill)
+        .align_x(Alignment::Center)
+        .padding(10)
+        .into(),
+    ])
+    .into()
+}
+
+#[allow(unused)]
+fn editable_text(text: &str, theme: &Theme) -> Element<'static, Message> {
+    let text_string = text.to_string();
+    let theme_clone = theme.clone();
+    container(
+        text_input("Edit clipboard history text", text)
+            .on_input(move |input| {
+                Message::EditClipboardHistory(Editable::Update {
+                    old: ClipBoardContentType::Text(text_string.clone()),
+                    new: ClipBoardContentType::Text(input),
+                })
+            })
+            .align_x(Alignment::Start)
+            .size(16)
+            .width(Length::Fill)
+            .style(move |_, _| settings_text_input_item_style(&theme_clone))
+            .font(theme.font()),
+    )
+    .height(Length::Fill)
+    .width(Length::Fill)
     .into()
 }

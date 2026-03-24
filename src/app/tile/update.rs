@@ -15,6 +15,7 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use rayon::slice::ParallelSliceMut;
 
+use crate::app::Editable;
 use crate::app::SetConfigBufferFields;
 use crate::app::SetConfigFields;
 use crate::app::SetConfigThemeFields;
@@ -87,6 +88,13 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
         }
 
         Message::EscKeyPressed(id) => {
+            if !tile.query_lc.is_empty() {
+                return Task::batch([
+                    Task::done(Message::ClearSearchQuery),
+                    Task::done(Message::ClearSearchResults),
+                ]);
+            }
+
             match tile.page {
                 Page::Main => {}
                 Page::Settings => {
@@ -168,8 +176,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 };
 
                 let quantity = match tile.page {
-                    Page::Main | Page::FileSearch => 66.5,
-                    Page::ClipboardHistory => 50.,
+                    Page::Main | Page::FileSearch | Page::ClipboardHistory => 66.5,
                     Page::EmojiSearch => 5.,
                     Page::Settings => 0.,
                 };
@@ -435,26 +442,50 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             }
         }
 
-        Message::ClipboardHistory(content) => {
-            if !tile.clipboard_content.contains(&content) {
-                tile.clipboard_content.insert(0, content);
-                return Task::none();
-            }
-
-            let new_content_vec = tile
-                .clipboard_content
-                .par_iter()
-                .filter_map(|x| {
-                    if *x == content {
-                        None
-                    } else {
-                        Some(x.to_owned())
+        Message::EditClipboardHistory(action) => {
+            match action {
+                Editable::Create(content) => {
+                    if !tile.clipboard_content.contains(&content) {
+                        tile.clipboard_content.insert(0, content);
+                        return Task::none();
                     }
-                })
-                .collect();
 
-            tile.clipboard_content = new_content_vec;
-            tile.clipboard_content.insert(0, content);
+                    let new_content_vec = tile
+                        .clipboard_content
+                        .par_iter()
+                        .filter_map(|x| {
+                            if *x == content {
+                                None
+                            } else {
+                                Some(x.to_owned())
+                            }
+                        })
+                        .collect();
+
+                    tile.clipboard_content = new_content_vec;
+                    tile.clipboard_content.insert(0, content);
+                }
+                Editable::Delete(content) => {
+                    tile.clipboard_content = tile
+                        .clipboard_content
+                        .iter()
+                        .filter_map(|x| {
+                            if *x == content {
+                                None
+                            } else {
+                                Some(x.to_owned())
+                            }
+                        })
+                        .collect();
+                }
+                Editable::Update { old, new } => {
+                    tile.clipboard_content = tile
+                        .clipboard_content
+                        .iter()
+                        .map(|x| if x == &old { new.clone() } else { x.to_owned() })
+                        .collect();
+                }
+            }
             Task::none()
         }
 

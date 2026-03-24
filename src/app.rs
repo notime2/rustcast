@@ -69,6 +69,13 @@ pub enum Move {
     Forwards(String),
 }
 
+#[derive(Debug, Clone)]
+pub enum Editable<T> {
+    Create(T),
+    Delete(T),
+    Update { old: T, new: T },
+}
+
 /// The message type that iced uses for actions that can do something
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -95,7 +102,7 @@ pub enum Message {
     UpdateApps,
     SetSender(ExtSender),
     SwitchToPage(Page),
-    ClipboardHistory(ClipBoardContentType),
+    EditClipboardHistory(Editable<ClipBoardContentType>),
     ChangeFocus(ArrowKey, u32),
     FileSearchResult(Vec<App>),
     FileSearchClear,

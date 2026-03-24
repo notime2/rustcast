@@ -19,7 +19,7 @@ impl ToApp for ClipBoardContentType {
     fn to_app(&self) -> App {
         let mut display_name = match self {
             ClipBoardContentType::Image(_) => "Image".to_string(),
-            ClipBoardContentType::Text(a) => a.to_owned(),
+            ClipBoardContentType::Text(a) => a.get(0..25).unwrap_or(a).to_string(),
         };
 
         let self_clone = self.clone();

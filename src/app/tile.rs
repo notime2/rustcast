@@ -318,7 +318,9 @@ fn handle_clipboard_history() -> impl futures::Stream<Item = Message> {
             {
                 info!("Adding item to cbhist");
                 output
-                    .send(Message::ClipboardHistory(content.to_owned()))
+                    .send(Message::EditClipboardHistory(crate::app::Editable::Create(
+                        content.to_owned(),
+                    )))
                     .await
                     .ok();
                 prev_byte_rep = byte_rep;

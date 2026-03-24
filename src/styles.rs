@@ -51,6 +51,20 @@ pub fn contents_style(theme: &ConfigTheme) -> container::Style {
     }
 }
 
+pub fn delete_button_style(theme: &ConfigTheme) -> button::Style {
+    let red_clr = Color::from_rgb(1.0, 0.2, 0.2);
+    button::Style {
+        text_color: red_clr,
+        background: Some(Background::Color(theme.bg_color())),
+        border: Border {
+            color: with_alpha(red_clr, 0.3),
+            width: 0.5,
+            radius: Radius::new(15),
+        },
+        ..Default::default()
+    }
+}
+
 /// Styling for each of the buttons that are what the "results" of rustcast are
 pub fn result_button_style(theme: &ConfigTheme) -> button::Style {
     button::Style {
