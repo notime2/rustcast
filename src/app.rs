@@ -91,6 +91,7 @@ pub enum Message {
     RunFunction(Function),
     OpenFocused,
     SetConfig(SetConfigFields),
+    OpenFileDialogue(String),
     ReturnFocus,
     EscKeyPressed(Id),
     ClearSearchResults,
@@ -112,6 +113,7 @@ pub enum Message {
 }
 
 #[derive(Debug, Clone)]
+#[allow(unused)]
 pub enum SetConfigFields {
     ToDefault,
     ToggleHotkey(String),
@@ -120,9 +122,9 @@ pub enum SetConfigFields {
     SearchUrl(String),
     HapticFeedback(bool),
     ShowMenubarIcon(bool),
-    //    Modes(HashMap<String, String>),
-    //    Aliases(HashMap<String, String>),
-    //    SearchDirs(Vec<String>),
+    Modes(Editable<(String, String)>),
+    Aliases(Editable<(String, String)>),
+    SearchDirs(Editable<Vec<String>>),
     DebounceDelay(u64),
     SetThemeFields(SetConfigThemeFields),
     SetBufferFields(SetConfigBufferFields),

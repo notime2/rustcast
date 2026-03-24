@@ -1,11 +1,17 @@
 //! The settings page UI
 
+use std::collections::HashMap;
+
 use iced::widget::Slider;
+use iced::widget::TextInput;
 use iced::widget::checkbox;
 use iced::widget::text_input;
 
+use crate::app::Editable;
 use crate::app::SetConfigBufferFields;
 use crate::app::SetConfigThemeFields;
+use crate::styles::delete_button_style;
+use crate::styles::settings_add_button_style;
 use crate::styles::settings_checkbox_style;
 use crate::styles::settings_save_button_style;
 use crate::styles::settings_slider_style;
@@ -351,6 +357,10 @@ pub fn settings_page(config: Config) -> Element<'static, Message> {
         font_family.into(),
         text_clr.into(),
         bg_clr.into(),
+        settings_hint_text(theme.clone(), "Aliases"),
+        aliases_item(config.aliases, &theme),
+        settings_hint_text(theme.clone(), "Rustcast modes"),
+        modes_item(config.modes, &theme),
         Row::from_iter([
             savebutton(theme.clone()),
             default_button(theme.clone()),
@@ -450,4 +460,139 @@ fn notice_item(theme: Theme, notice: impl ToString) -> Element<'static, Message>
         .width(Length::Fill)
         .align_x(Alignment::End)
         .into()
+}
+
+fn aliases_item(aliases: HashMap<String, String>, theme: &Theme) -> Element<'static, Message> {
+    let theme_clone = theme.clone();
+    let mut aliases = aliases
+        .iter()
+        .map(|(k, v)| (k.to_owned(), v.to_owned()))
+        .collect::<Vec<(String, String)>>();
+    aliases.sort_by_key(|x| x.0.len());
+    Column::from_iter([
+        container(
+            Column::from_iter(aliases.iter().map(|(key, value)| {
+                let key_clone = key.clone();
+                let val_clone = value.clone();
+                let key_clone_2 = key.clone();
+                let val_clone_2 = value.clone();
+                let theme_clone_2 = theme.clone();
+                Row::from_iter([
+                    text_input_cell(key.to_owned(), &theme_clone, "Shorthand")
+                        .on_input(move |input| {
+                            Message::SetConfig(SetConfigFields::Aliases(Editable::Update {
+                                old: (key_clone.clone(), val_clone.clone()),
+                                new: (input.clone(), val_clone.clone()),
+                            }))
+                        })
+                        .into(),
+                    text_input_cell(value.to_owned(), &theme_clone, "Term")
+                        .on_input(move |input| {
+                            Message::SetConfig(SetConfigFields::Aliases(Editable::Update {
+                                old: (key_clone_2.clone(), val_clone_2.clone()),
+                                new: (key_clone_2.clone(), input.clone()),
+                            }))
+                        })
+                        .into(),
+                    Button::new("Delete")
+                        .on_press(Message::SetConfig(SetConfigFields::Aliases(
+                            Editable::Delete((key.clone(), value.clone())),
+                        )))
+                        .style(move |_, _| delete_button_style(&theme_clone_2))
+                        .into(),
+                ])
+                .spacing(10)
+                .into()
+            }))
+            .spacing(10),
+        )
+        .height(Length::Fill)
+        .width(Length::Fill)
+        .into(),
+        Button::new(
+            Text::new("+")
+                .align_x(Alignment::Center)
+                .align_y(Alignment::Center),
+        )
+        .style(move |_, _| settings_add_button_style(&theme_clone.clone()))
+        .on_press(Message::SetConfig(SetConfigFields::Aliases(
+            Editable::Create((String::new(), String::new())),
+        )))
+        .into(),
+    ])
+    .spacing(10)
+    .width(Length::Fill)
+    .align_x(Alignment::Center)
+    .into()
+}
+
+fn text_input_cell(text: String, theme: &Theme, placeholder: &str) -> TextInput<'static, Message> {
+    text_input(placeholder, &text)
+        .font(theme.font())
+        .padding(5)
+        .on_submit(Message::WriteConfig(false))
+}
+
+fn modes_item(modes: HashMap<String, String>, theme: &Theme) -> Element<'static, Message> {
+    let theme_clone = theme.clone();
+    let mut modes = modes
+        .iter()
+        .map(|(k, v)| (k.to_owned(), v.to_owned()))
+        .collect::<Vec<(String, String)>>();
+    modes.sort_by_key(|x| x.0.len());
+    Column::from_iter([
+        container(
+            Column::from_iter(modes.iter().map(|(key, value)| {
+                let theme_clone_1 = theme_clone.clone();
+                let display_val = if value.is_empty() {
+                    "Pick a file".to_string()
+                } else {
+                    value.replace(&std::env::var("HOME").unwrap_or("".to_string()), "~")
+                };
+                let key_clone = key.clone();
+                let val_clone = value.clone();
+                let theme_clone_2 = theme.clone();
+                Row::from_iter([
+                    text_input_cell(key.to_owned(), &theme_clone, "Shorthand")
+                        .on_input(move |input| {
+                            Message::SetConfig(SetConfigFields::Modes(Editable::Update {
+                                old: (key_clone.clone(), val_clone.clone()),
+                                new: (input.clone(), val_clone.clone()),
+                            }))
+                        })
+                        .into(),
+                    Button::new(Text::new(display_val))
+                        .on_press(Message::OpenFileDialogue(key.to_owned()))
+                        .style(move |_, _| settings_add_button_style(&theme_clone_1.clone()))
+                        .into(),
+                    Button::new("Delete")
+                        .on_press(Message::SetConfig(SetConfigFields::Modes(
+                            Editable::Delete((key.clone(), value.clone())),
+                        )))
+                        .style(move |_, _| delete_button_style(&theme_clone_2))
+                        .into(),
+                ])
+                .spacing(10)
+                .into()
+            }))
+            .spacing(10),
+        )
+        .height(Length::Fill)
+        .width(Length::Fill)
+        .into(),
+        Button::new(
+            Text::new("+")
+                .align_x(Alignment::Center)
+                .align_y(Alignment::Center),
+        )
+        .on_press(Message::SetConfig(SetConfigFields::Modes(
+            Editable::Create((String::new(), String::new())),
+        )))
+        .style(move |_, _| settings_add_button_style(&theme_clone.clone()))
+        .into(),
+    ])
+    .spacing(10)
+    .width(Length::Fill)
+    .align_x(Alignment::Center)
+    .into()
 }

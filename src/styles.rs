@@ -198,6 +198,19 @@ pub fn settings_save_button_style(theme: &ConfigTheme) -> button::Style {
     }
 }
 
+pub fn settings_add_button_style(theme: &ConfigTheme) -> button::Style {
+    button::Style {
+        background: None,
+        text_color: theme.text_color(1.),
+        border: Border {
+            color: theme.text_color(0.7),
+            width: 0.7,
+            radius: Radius::new(10),
+        },
+        ..Default::default()
+    }
+}
+
 pub fn settings_checkbox_style(theme: &ConfigTheme) -> checkbox::Style {
     checkbox::Style {
         background: Background::Color(Color::TRANSPARENT),

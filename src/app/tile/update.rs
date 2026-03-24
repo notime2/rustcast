@@ -66,7 +66,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             } else {
                 info!("Switching to default mode");
                 tile.current_mode = "default".to_string();
-                window::latest().map(|x| Message::HideWindow(x.unwrap()))
+                Task::none()
             }
         }
 
@@ -549,14 +549,69 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             }
         }
 
+        Message::OpenFileDialogue(mode_name) => rfd::FileDialog::new()
+            .add_filter("shell", &["sh", "bash", "zsh"])
+            .set_directory(
+                std::env::var("HOME").unwrap_or("".to_string()) + "/.config/rustcast/config.toml",
+            )
+            .pick_file()
+            .and_then(|x| {
+                x.to_str().map(|x| {
+                    Task::batch([
+                        Task::done(Message::SetConfig(SetConfigFields::Modes(
+                            Editable::Create((mode_name, x.to_string())),
+                        ))),
+                        Task::done(Message::WriteConfig(false)),
+                    ])
+                })
+            })
+            .unwrap_or(Task::none()),
+
         Message::SetConfig(config) => {
             let mut final_config = tile.config.clone();
             match config {
                 SetConfigFields::ToggleHotkey(hk) => final_config.toggle_hotkey = hk,
                 SetConfigFields::ClipboardHotkey(hk) => final_config.toggle_hotkey = hk,
-                //                SetConfigFields::Modes(modes) => final_config.modes = modes,
-                //                SetConfigFields::Aliases(aliases) => final_config.aliases = aliases,
-                //                SetConfigFields::SearchDirs(dirs) => final_config.search_dirs = dirs,
+                SetConfigFields::Modes(Editable::Create((key, value))) => {
+                    final_config.modes.entry(key).or_insert(value);
+                }
+                SetConfigFields::Modes(Editable::Delete((key, _))) => {
+                    final_config.modes.remove(&key);
+                }
+                SetConfigFields::Modes(Editable::Update { old, new }) => {
+                    final_config.modes.remove(&old.0);
+                    final_config.modes.insert(new.0, new.1);
+                }
+                SetConfigFields::Aliases(Editable::Create((key, value))) => {
+                    final_config.aliases.entry(key).or_insert(value);
+                }
+                SetConfigFields::Aliases(Editable::Delete((key, _))) => {
+                    final_config.aliases.remove(&key);
+                }
+                SetConfigFields::Aliases(Editable::Update { old, new }) => {
+                    final_config.aliases.remove(&old.0);
+                    final_config.aliases.insert(new.0, new.1);
+                }
+                SetConfigFields::SearchDirs(Editable::Create(dir)) => {
+                    final_config.search_dirs = dir
+                }
+                SetConfigFields::SearchDirs(Editable::Delete(dirs)) => {
+                    final_config.search_dirs = final_config
+                        .search_dirs
+                        .iter()
+                        .filter_map(|dir| {
+                            if !dirs.contains(dir) {
+                                Some(dir.to_owned())
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                }
+                SetConfigFields::SearchDirs(Editable::Update { old, new }) => {
+                    let _ = old;
+                    let _ = new;
+                }
                 SetConfigFields::SearchUrl(url) => final_config.search_url = url,
                 SetConfigFields::PlaceHolder(placeholder) => final_config.placeholder = placeholder,
                 SetConfigFields::DebounceDelay(delay) => final_config.debounce_delay = delay,
@@ -588,9 +643,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 SetConfigFields::ToDefault => {
                     final_config = Config::default();
                     final_config.shells = tile.config.shells.clone();
-                    final_config.aliases = tile.config.aliases.clone();
                     final_config.search_dirs = tile.config.search_dirs.clone();
-                    final_config.modes = tile.config.modes.clone();
                 }
             };
 
